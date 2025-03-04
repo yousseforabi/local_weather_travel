@@ -20,8 +20,39 @@ app.use(bodyParser.json());
 }
 
 const API_URL = "https://api.trafikinfo.trafikverket.se/v2/data.json";
+const AUTH_KEY = "6997014603744628afdafa7896569623"
 
-const AUTH_KEY = process.env.TRAFIKVERKET_API_KEY;
+app.get("/traffic", async (req, res) => {
+  try {
+    const jsonReq = {
+      REQUEST: {
+        login: { 
+          authenticationkey: AUTH_KEY,
+        },
+        QUERY: [
+          {
+            objecttype: "TrafficFlow",
+            schemaversion: "1.5",
+            limit: 1,
+          },
+        ],
+      },
+    };
+    
+    const response = await axios.post(API_URL, jsonReq, {
+      headers: {
+        "Authorization": `Bearer ${AUTH_KEY}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 
 app.get("/geocode", async (req, res) => {
