@@ -62,6 +62,7 @@ app.get("/geocode", async (req, res) => {
   }
 
   try {
+    console.log("Received address:", address);
     const apiKey = process.env.GEO_API_KEY;
     const url = `https://geokeo.com/geocode/v1/search.php?q=${encodeURIComponent(
       address
@@ -70,6 +71,7 @@ app.get("/geocode", async (req, res) => {
     const response = await fetch(url);
     
     console.log("Response status:", response.status);
+
     const text = await response.text();
     console.log("Response body:", text);
 
