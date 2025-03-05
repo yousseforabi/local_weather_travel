@@ -8,11 +8,12 @@ const bodyParser = require("body-parser");
 dotenv.config();
 
 const app = express();
-const corsOption = {
-  origin: ["http://localhost:5173"],
+const corsOptions = {
+  origin: "http://localhost:5173",
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-app.use(cors(corsOption));
+app.use(cors(corsOptions));
 
 app.use(bodyParser.json());
 {
@@ -22,17 +23,51 @@ app.use(bodyParser.json());
 const API_URL = "https://api.trafikinfo.trafikverket.se/v2/data.json";
 const AUTH_KEY = "6997014603744628afdafa7896569623"
 
-app.get("/traffic", async (req, res) => {
+app.get("/traffic-incidents", async (req, res) => {
   try {
     const jsonReq = {
       REQUEST: {
-        login: { 
+        LOGIN: { 
           authenticationkey: AUTH_KEY,
         },
         QUERY: [
           {
-            objecttype: "TrafficFlow",
+            objecttype: "Situation",
+            namespace: "Road.TrafficInfo",
             schemaversion: "1.5",
+            limit: 1,
+          },
+        ],
+      },
+    };
+    
+    const response = await axios.post(API_URL, jsonReq, {
+      headers: {
+        "Authorization": `Bearer ${AUTH_KEY}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/road-condition", async (req, res) => {
+  try {
+    const jsonReq = {
+      REQUEST: {
+        LOGIN: { 
+          authenticationkey: AUTH_KEY,
+        },
+        QUERY: [
+          {
+            objecttype: "RoadCondition",
+            namespace: "Road.TrafficInfo",
+            schemaversion: "1.3",
             limit: 1,
           },
         ],
