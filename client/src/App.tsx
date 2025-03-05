@@ -1,13 +1,16 @@
-import AdressInput from "./components/AdressInput";
+import { AddressProvider } from "./context/AddressProvider";
+import AddressInput from "./components/AddressInput";
 
 
 const App = () => {
   return (
-    <div>
-      {/*components here*/}
+    <>
+   {/*components here*/}
+       <AddressProvider>
       <h1>Local Travel & Weather Dashboard</h1>
-      <AdressInput />
-    </div>
+      <AddressInput />
+      </AddressProvider>
+    </>
   )
 }
 
