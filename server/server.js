@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const fetch = require("node-fetch");
+const getCityWeather = require("./weather");
 
 dotenv.config();
 
@@ -16,6 +17,16 @@ app.use(cors(corsOption));
 {
   /* logic  */
 }
+
+app.get("/weather", async (req, res) => {
+  try {
+    const response = await getCityWeather(req.query.city);
+    return res.json(response);
+  } catch (error) {
+    console.error(error);
+    res.status(400).send(error.message);
+  }
+});
 
 app.get("/geocode", async (req, res) => {
   const address = req.query.address;
