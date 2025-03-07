@@ -4,8 +4,9 @@ const axios = require("axios");
 const dotenv = require("dotenv");
 const fetch = require("node-fetch");
 const bodyParser = require("body-parser");
+const getCityWeather = require("./weather");
 
-dotenv.config();
+require("dotenv").config();
 
 const app = express();
 const corsOptions = {
@@ -14,81 +15,46 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
 app.use(bodyParser.json());
-{
-  /* logic  */
-}
 
-const API_URL = "https://api.trafikinfo.trafikverket.se/v2/data.json";
-const AUTH_KEY = "6997014603744628afdafa7896569623"
+const API_URL = process.env.TRAFIKVERKET_API_URL;
+const AUTH_KEY = process.env.TRAFIKVERKET_API_KEY;
+const xmlDataSituation = `
+<REQUEST>
+  <LOGIN authenticationkey="${AUTH_KEY}"/>
+  <QUERY objecttype="Situation" schemaversion="1" limit="10">
+    <FILTER>
+      <NEAR name="Deviation.Geometry.WGS84" value="12.413973 56.024823"/>
+    </FILTER>
+  </QUERY>
+</REQUEST>
+`
 
-app.get("/traffic-incidents", async (req, res) => {
+app.get("/fetchDataTrafficSituation", (req, res) => {
+  axios.post(API_URL, xmlDataSituation, {
+    headers: {
+      "Content-Type": "application/xml"  
+    }
+  })
+  .then((response) => {
+    console.log("Response: ", response.data);
+    res.json(response.data); 
+  })
+  .catch((error) => {
+    console.error("Error fetching data: ", error);
+    res.status(500).send("Failed to fetch data"); 
+  })
+})
+
+app.get("/weather", async (req, res) => {
   try {
-    const jsonReq = {
-      REQUEST: {
-        LOGIN: { 
-          authenticationkey: AUTH_KEY,
-        },
-        QUERY: [
-          {
-            objecttype: "Situation",
-            namespace: "Road.TrafficInfo",
-            schemaversion: "1.5",
-            limit: 1,
-          },
-        ],
-      },
-    };
-    
-    const response = await axios.post(API_URL, jsonReq, {
-      headers: {
-        "Authorization": `Bearer ${AUTH_KEY}`,
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      }
-    });
-
-    res.json(response.data);
+    const response = await getCityWeather(req.query.city);
+    return res.json(response);
   } catch (error) {
-    console.error("Error fetching data:", error);
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(400).send(error.message);
   }
 });
-
-app.get("/road-condition", async (req, res) => {
-  try {
-    const jsonReq = {
-      REQUEST: {
-        LOGIN: { 
-          authenticationkey: AUTH_KEY,
-        },
-        QUERY: [
-          {
-            objecttype: "RoadCondition",
-            namespace: "Road.TrafficInfo",
-            schemaversion: "1.3",
-            limit: 1,
-          },
-        ],
-      },
-    };
-    
-    const response = await axios.post(API_URL, jsonReq, {
-      headers: {
-        "Authorization": `Bearer ${AUTH_KEY}`,
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      }
-    });
-
-    res.json(response.data);
-  } catch (error) {
-    console.error("Error fetching data:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
 
 app.get("/geocode", async (req, res) => {
   const address = req.query.address;
