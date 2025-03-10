@@ -11,41 +11,74 @@ type Suggestion = {
 const AddressInput = () => {
   const { setSelectedAddress, setCoordinates, selectedAddress, coordinates } = useContext(AddressContext)!;
   const [address, setAddress] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string>("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [loading, setLoading] = useState(false);  // State for loading indicator
+  const [loading, setLoading] = useState(false);
+
+  const fetchWithTimeout = async (url: string, timeout = 5000, retries = 3) => {
+    for (let i = 0; i < retries; i++) {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+
+      try {
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(id);
+
+        if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+
+        return await response.json();
+      } catch (err) {
+        clearTimeout(id);
+        if (err instanceof Error) {
+          console.error("Fetch error:", err.message);
+        } else {
+          console.error("Unknown error occurred");
+        }
+        if (i === retries - 1) throw new Error("Failed after multiple attempts");
+      }
+    }
+  };
 
   const fetchCoordinates = useCallback(async () => {
     if (!address.trim()) {
       setError("Please enter an address");
       return;
     }
-
+  
     setError("");
-    setLoading(true); // Start loading
-
+    setLoading(true);
+  
     const apiUrl = `http://localhost:8080/geocode?address=${encodeURIComponent(address)}`;
-
+  
     try {
-      const response = await fetch(apiUrl);
-      if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
-
-      const data = await response.json();
+      await new Promise((resolve) => setTimeout(resolve, 500));
+  
+      const data = await fetchWithTimeout(apiUrl);
+  
       console.log("API Response:", data);
-
+  
       if (data.status.toLowerCase() === "ok" && data.results.length > 0) {
         setSuggestions(data.results);
       } else {
-        setError("Address not found or unavailable.");
-        setSuggestions([]);
+        console.warn("First request failed, retrying...");
+        await new Promise((resolve) => setTimeout(resolve, 1000)); 
+        const retryData = await fetchWithTimeout(apiUrl);
+  
+        if (retryData.status.toLowerCase() === "ok" && retryData.results.length > 0) {
+          setSuggestions(retryData.results);
+        } else {
+          setError("Address not found or unavailable.");
+          setSuggestions([]);
+        }
       }
     } catch (err) {
       console.error(err);
       setError("Failed to fetch coordinates.");
     } finally {
-      setLoading(false); // End loading
+      setLoading(false);
     }
   }, [address]);
+  
 
   const handleSelectSuggestion = (lat: number, lon: number, formattedAddress: string) => {
     setCoordinates({ lat, lon });
@@ -53,9 +86,8 @@ const AddressInput = () => {
     setSuggestions([]);
   };
 
-  // Function to add space after commas in the formatted address
   const formatAddress = (address: string) => {
-    return address.replace(/,([^\s])/g, ", $1"); // Adds space after comma if not followed by a space
+    return address.replace(/,([^\s])/g, ", $1");
   };
 
   return (
@@ -86,17 +118,16 @@ const AddressInput = () => {
                 )
               }
             >
-              {formatAddress(result.formatted_address)} {/* Format the address */}
+              {formatAddress(result.formatted_address)}
             </li>
           ))}
         </ul>
       )}
 
-      {/* Visa den valda adressen och koordinaterna */}
       {selectedAddress && coordinates && (
         <div>
           <h3>Selected Address:</h3>
-          <p>{formatAddress(selectedAddress)}</p> {/* Format the selected address */}
+          <p>{formatAddress(selectedAddress)}</p>
           <h4>Coordinates:</h4>
           <p>Latitude: {coordinates.lat}</p>
           <p>Longitude: {coordinates.lon}</p>

@@ -28,23 +28,24 @@ const xmlDataSituation = `
     </FILTER>
   </QUERY>
 </REQUEST>
-`
+`;
 
 app.get("/fetchDataTrafficSituation", (req, res) => {
-  axios.post(API_URL, xmlDataSituation, {
-    headers: {
-      "Content-Type": "application/xml"  
-    }
-  })
-  .then((response) => {
-    console.log("Response: ", response.data);
-    res.json(response.data); 
-  })
-  .catch((error) => {
-    console.error("Error fetching data: ", error);
-    res.status(500).send("Failed to fetch data"); 
-  })
-})
+  axios
+    .post(API_URL, xmlDataSituation, {
+      headers: {
+        "Content-Type": "application/xml",
+      },
+    })
+    .then((response) => {
+      console.log("Response: ", response.data);
+      res.json(response.data);
+    })
+    .catch((error) => {
+      console.error("Error fetching data: ", error);
+      res.status(500).send("Failed to fetch data");
+    });
+});
 
 app.get("/weather", async (req, res) => {
   try {
@@ -55,6 +56,45 @@ app.get("/weather", async (req, res) => {
     res.status(400).send(error.message);
   }
 });
+
+const fetchWithTimeout = async (
+  url,
+  options = {},
+  timeout = 5000,
+  retries = 3
+) => {
+  for (let i = 0; i < retries; i++) {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+      });
+      clearTimeout(id);
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status: ${response.status}`);
+      }
+
+      const text = await response.text();
+      if (response.headers.get("content-type")?.includes("application/json")) {
+        return JSON.parse(text);
+      } else {
+        throw new Error("Unexpected response format");
+      }
+    } catch (error) {
+      if (error.name === "AbortError") {
+        console.error("Request timeout, retrying...");
+      } else {
+        console.error("Fetch error:", error.message);
+      }
+      if (i === retries - 1) {
+        throw new Error("Failed after multiple attempts");
+      }
+    }
+  }
+};
 
 app.get("/geocode", async (req, res) => {
   const address = req.query.address;
@@ -70,7 +110,7 @@ app.get("/geocode", async (req, res) => {
     )}&api=${apiKey}`;
 
     const response = await fetch(url);
-    
+
     console.log("Response status:", response.status);
 
     const text = await response.text();
