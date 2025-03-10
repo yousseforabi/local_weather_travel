@@ -49,41 +49,64 @@ const AddressInput = () => {
     setLoading(true);
   
     const apiUrl = `http://localhost:8080/geocode?address=${encodeURIComponent(address)}`;
+    let retries = 3; 
   
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-  
-      const data = await fetchWithTimeout(apiUrl);
-  
-      console.log("API Response:", data);
-  
-      if (data.status.toLowerCase() === "ok" && data.results.length > 0) {
-        setSuggestions(data.results);
-      } else {
-        console.warn("First request failed, retrying...");
+    while (retries > 0) {
+      try {
         await new Promise((resolve) => setTimeout(resolve, 1000)); 
-        const retryData = await fetchWithTimeout(apiUrl);
   
-        if (retryData.status.toLowerCase() === "ok" && retryData.results.length > 0) {
-          setSuggestions(retryData.results);
+        const data = await fetchWithTimeout(apiUrl);
+  
+        console.log("API Response:", data);
+  
+        if (data.status.toLowerCase() === "ok" && data.results.length > 0) {
+          setSuggestions(data.results);
+          setLoading(false);
+          return; 
         } else {
-          setError("Address not found or unavailable.");
-          setSuggestions([]);
+          console.warn(`Request failed, retrying... (${retries} retries left)`);
+          await new Promise((resolve) => setTimeout(resolve, 2000)); 
+          retries--;
         }
+      } catch (err) {
+        console.error(err);
+        setError("Failed to fetch coordinates.");
+        setLoading(false);
+        return; 
+      }
+    }
+  
+    setError("Address not found or unavailable after multiple attempts.");
+    setSuggestions([]);
+    setLoading(false);
+  }, [address]);
+
+  const sendCoordinatesToBackend = async (lat: number, lon: number) => {
+    try {
+      const response = await fetch("http://localhost:8080/logCoordinates", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ lat, lon }),
+      });
+
+      if (!response.ok) {
+        console.error("Failed to send coordinates to backend.");
+      } else {
+        console.log("Coordinates sent to backend.");
       }
     } catch (err) {
-      console.error(err);
-      setError("Failed to fetch coordinates.");
-    } finally {
-      setLoading(false);
+      console.error("Error sending coordinates:", err);
     }
-  }, [address]);
-  
+  };
 
-  const handleSelectSuggestion = (lat: number, lon: number, formattedAddress: string) => {
+  const handleSelectSuggestion = async (lat: number, lon: number, formattedAddress: string) => {
     setCoordinates({ lat, lon });
     setSelectedAddress(formattedAddress);
     setSuggestions([]);
+
+    await sendCoordinatesToBackend(lat, lon);
   };
 
   const formatAddress = (address: string) => {
