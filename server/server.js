@@ -21,18 +21,25 @@ let frontendCoordinates = {};
 
 const API_URL = process.env.TRAFIKVERKET_API_URL;
 const AUTH_KEY = process.env.TRAFIKVERKET_API_KEY;
-const xmlDataSituation = `
-<REQUEST>
-  <LOGIN authenticationkey="${AUTH_KEY}"/>
-  <QUERY objecttype="Situation" schemaversion="1" limit="10">
-    <FILTER>
-      <NEAR name="Deviation.Geometry.WGS84" value="12.413973 56.024823"/>
-    </FILTER>
-  </QUERY>
-</REQUEST>
-`;
 
 app.get("/fetchDataTrafficSituation", (req, res) => {
+  const { lat, lon } = req.query; 
+
+  if (!lat || !lon) {
+    return res.status(400).json({ error: "Missing coordinates" });
+  }
+
+  const xmlDataSituation = `
+  <REQUEST>
+    <LOGIN authenticationkey="${AUTH_KEY}"/>
+    <QUERY objecttype="Situation" schemaversion="1" limit="10">
+      <FILTER>
+        <NEAR name="Deviation.Geometry.WGS84" value="${lon} ${lat}"/>
+      </FILTER>
+    </QUERY>
+  </REQUEST>
+  `;
+
   axios
     .post(API_URL, xmlDataSituation, {
       headers: {
@@ -48,6 +55,7 @@ app.get("/fetchDataTrafficSituation", (req, res) => {
       res.status(500).send("Failed to fetch data");
     });
 });
+
 
 app.get("/weather", async (req, res) => {
   try {

@@ -9,11 +9,13 @@ type Suggestion = {
 };
 
 const AddressInput = () => {
+  
   const { setSelectedAddress, setCoordinates, selectedAddress, coordinates } = useContext(AddressContext)!;
   const [address, setAddress] = useState("");
   const [error, setError] = useState<string>("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
+
 
   const fetchWithTimeout = async (url: string, timeout = 5000, retries = 3) => {
     for (let i = 0; i < retries; i++) {
@@ -56,30 +58,32 @@ const AddressInput = () => {
         await new Promise((resolve) => setTimeout(resolve, 1000)); 
   
         const data = await fetchWithTimeout(apiUrl);
-  
         console.log("API Response:", data);
   
         if (data.status.toLowerCase() === "ok" && data.results.length > 0) {
+          const coordinates = data.results[0].geometry.location;
+          console.log(`Latitudine: ${coordinates.lat}, Longitudine: ${coordinates.lng}`);
+          console.log("Final coordinates are: ", coordinates);
+  
           setSuggestions(data.results);
           setLoading(false);
-          return; 
-        } else {
-          console.warn(`Request failed, retrying... (${retries} retries left)`);
-          await new Promise((resolve) => setTimeout(resolve, 2000)); 
-          retries--;
+          return;  
         }
+  
       } catch (err) {
-        console.error(err);
-        setError("Failed to fetch coordinates.");
-        setLoading(false);
-        return; 
+        console.error("Error fetching coordinates:", err);
       }
+  
+      console.warn(`Request failed, retrying... (${retries - 1} retries left)`);
+      await new Promise((resolve) => setTimeout(resolve, 2000)); 
+      retries--;
     }
   
     setError("Address not found or unavailable after multiple attempts.");
     setSuggestions([]);
     setLoading(false);
   }, [address]);
+  
 
   const sendCoordinatesToBackend = async (lat: number, lon: number) => {
     try {
@@ -104,13 +108,15 @@ const AddressInput = () => {
   const handleSelectSuggestion = async (lat: number, lon: number, formattedAddress: string) => {
     setCoordinates({ lat, lon });
     setSelectedAddress(formattedAddress);
+    console.log("Coordinates:", { lat, lon });
     setSuggestions([]);
 
     await sendCoordinatesToBackend(lat, lon);
   };
 
   const formatAddress = (address: string) => {
-    return address.replace(/,([^\s])/g, ", $1");
+    const formatted = address.replace(/,([^\s])/g, ", $1");
+    return formatted;
   };
 
   return (
@@ -147,7 +153,7 @@ const AddressInput = () => {
         </ul>
       )}
 
-      {selectedAddress && coordinates && (
+      {coordinates ? (
         <div>
           <h3>Selected Address:</h3>
           <p>{formatAddress(selectedAddress)}</p>
@@ -155,9 +161,11 @@ const AddressInput = () => {
           <p>Latitude: {coordinates.lat}</p>
           <p>Longitude: {coordinates.lon}</p>
         </div>
-      )}
+        ) : (
+          <p>No coordinates available.</p>
+        )}
     </div>
-  );
-};
+      );
+    };
 
 export default AddressInput;
