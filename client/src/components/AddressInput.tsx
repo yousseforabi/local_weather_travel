@@ -58,47 +58,32 @@ const AddressInput = () => {
         await new Promise((resolve) => setTimeout(resolve, 1000)); 
   
         const data = await fetchWithTimeout(apiUrl);
-  
         console.log("API Response:", data);
   
         if (data.status.toLowerCase() === "ok" && data.results.length > 0) {
+          const coordinates = data.results[0].geometry.location;
+          console.log(`Latitudine: ${coordinates.lat}, Longitudine: ${coordinates.lng}`);
+          console.log("Final coordinates are: ", coordinates);
+  
           setSuggestions(data.results);
           setLoading(false);
-          return; 
-      if (data.status.toLowerCase() === "ok" && data.results.length > 0) {
-
-        //CARMELO>>>>
-        const coordinates = data.results[0].geometry.location;
-        console.log(`Latitudine: ${coordinates.lat}, Longitudine: ${coordinates.lng}`);
-        console.log("Final coordinates are: ", coordinates)
-        //<<<<CARMELO
-
-
-        setSuggestions(data.results);
-      } else {
-        console.warn("First request failed, retrying...");
-        await new Promise((resolve) => setTimeout(resolve, 1000)); 
-        const retryData = await fetchWithTimeout(apiUrl);
-  
-        if (retryData.status.toLowerCase() === "ok" && retryData.results.length > 0) {
-          setSuggestions(retryData.results);
-        } else {
-          console.warn(`Request failed, retrying... (${retries} retries left)`);
-          await new Promise((resolve) => setTimeout(resolve, 2000)); 
-          retries--;
+          return;  
         }
+  
       } catch (err) {
-        console.error(err);
-        setError("Failed to fetch coordinates.");
-        setLoading(false);
-        return; 
+        console.error("Error fetching coordinates:", err);
       }
+  
+      console.warn(`Request failed, retrying... (${retries - 1} retries left)`);
+      await new Promise((resolve) => setTimeout(resolve, 2000)); 
+      retries--;
     }
   
     setError("Address not found or unavailable after multiple attempts.");
     setSuggestions([]);
     setLoading(false);
   }, [address]);
+  
 
   const sendCoordinatesToBackend = async (lat: number, lon: number) => {
     try {
