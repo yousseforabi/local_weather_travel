@@ -1,19 +1,19 @@
 import { AddressProvider } from "./context/AddressProvider";
 import AddressInput from "./components/AddressInput";
-// src/App.tsx
+import Traffic from "./components/traffic/Traffic";
 
-import TransportDepartures from './components/transportDeparture';
+const App = () => {
 
-function App() {
   return (
     <>
-      <TransportDepartures />
-       <AddressProvider>
+   {/*components here*/}
+      <AddressProvider>
       <h1>Local Travel & Weather Dashboard</h1>
       <AddressInput />
+      <Traffic />
       </AddressProvider>
     </>
-  );
+  )
 }
 
-export default App;
+export default App
