@@ -17,6 +17,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
+let frontendCoordinates = {};
+
 const API_URL = process.env.TRAFIKVERKET_API_URL;
 const AUTH_KEY = process.env.TRAFIKVERKET_API_KEY;
 
@@ -65,44 +67,30 @@ app.get("/weather", async (req, res) => {
   }
 });
 
-const fetchWithTimeout = async (
-  url,
-  options = {},
-  timeout = 5000,
-  retries = 3
-) => {
-  for (let i = 0; i < retries; i++) {
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeout);
-    try {
-      const response = await fetch(url, {
-        ...options,
-        signal: controller.signal,
-      });
-      clearTimeout(id);
+app.post("/logCoordinates", (req, res) => {
+  const { lat, lon } = req.body;
 
-      if (!response.ok) {
-        throw new Error(`Request failed with status: ${response.status}`);
-      }
-
-      const text = await response.text();
-      if (response.headers.get("content-type")?.includes("application/json")) {
-        return JSON.parse(text);
-      } else {
-        throw new Error("Unexpected response format");
-      }
-    } catch (error) {
-      if (error.name === "AbortError") {
-        console.error("Request timeout, retrying...");
-      } else {
-        console.error("Fetch error:", error.message);
-      }
-      if (i === retries - 1) {
-        throw new Error("Failed after multiple attempts");
-      }
-    }
+  if (!lat || !lon) {
+    return res
+      .status(400)
+      .json({ error: "Latitude and longitude are required" });
   }
-};
+
+  frontendCoordinates = { lat, lon };
+
+  console.log("--------------------------------------------------");
+  console.log("FRONTEND COORDINATES RECEIVED - START HERE:");
+  console.log("--------------------------------------------------");
+  console.log(JSON.stringify(frontendCoordinates, null, 2));
+  console.log("--------------------------------------------------");
+  console.log("FRONTEND COORDINATES RECEIVED - END HERE:");
+  console.log("--------------------------------------------------");
+  console.log(
+    "FIND THESE COORDINATES IN CODE: 'frontendCoordinates' variable inside '/logCoordinates' POST route."
+  );
+
+  res.json({ message: "Coordinates received", lat, lon });
+});
 
 app.get("/geocode", async (req, res) => {
   const address = req.query.address;
@@ -112,13 +100,14 @@ app.get("/geocode", async (req, res) => {
 
   try {
     console.log("Received address:", address);
+    console.log("Current frontendCoordinates:", frontendCoordinates);
+
     const apiKey = process.env.GEO_API_KEY;
     const url = `https://geokeo.com/geocode/v1/search.php?q=${encodeURIComponent(
       address
     )}&api=${apiKey}`;
 
     const response = await fetch(url);
-
     console.log("Response status:", response.status);
 
     const text = await response.text();
