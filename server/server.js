@@ -56,6 +56,88 @@ app.get("/fetchDataTrafficSituation", (req, res) => {
     });
 });
 
+app.get("/fetchDataDepartures", (req, res) => {
+ // const { lat, lon } = req.query; 
+ const lat = 58.9035;
+ const lon = 17.9479;
+
+  if (!lat || !lon) {
+    return res.status(400).json({ error: "Missing coordinates" });
+  }
+
+  // PSEUDO CODE
+  const nearbyStations = `
+<REQUEST>
+    <LOGIN authenticationkey="1d8b48bc9b5f4df09c17df61a6b08899" />
+    <QUERY objecttype="TrainStation" schemaversion="1">
+        <FILTER>
+            <WITHIN name="Geometry.WGS84" shape="center" value="17.9479 58.9035" radius="10"/>
+        </FILTER>
+    </QUERY>
+</REQUEST>
+  `;
+
+  axios
+    .post(API_URL, nearbyStations, {
+      headers: {
+        "Content-Type": "application/xml",
+      },
+    })
+    .then(async(response) => {
+      console.log("Response about nearby stations: ", response.data);
+      //res.json(response.data);
+
+      // call another api to get the departures - PSEUDO CODE
+      // USE FOREACH TO GET THE DEPARTURES FOR EACH STATION
+      // SAVE THE DEPARTURES IN AN ARRAY DEPARTURES
+      // RETURN THE ARRAY LIKE res.json(DEPARTURES));
+      
+      let departures = [];
+
+      for (let i = 0; i < response.data.RESPONSE.RESULT.length; i++) {
+        // AdvertisedLocationName
+      const departures_for_a_station = `
+      <REQUEST>
+        <LOGIN authenticationkey="${AUTH_KEY}" />
+        <QUERY objecttype="TrainAnnouncement" schemaversion="1.0">
+          <FILTER>
+            <EQ name="LocationSignature" value="17.9479 58.9035" />`;
+
+            try {
+                console.log("making request for station", departures_for_a_station);
+            
+                  // Make the fetch request
+                const response = await fetch('https://api.trafikinfo.trafikverket.se/v2/data.xml', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'text/xml',
+                      'Accept': 'application/xml'
+                  },
+                  body: departures_for_a_station
+              });
+
+              // Check if the response was successful
+              if (!response.ok) {
+                console.log("Response for a station was not ok:", response);
+                  throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              console.log("Response for a station was ok, attempting to add to departures array as response.data:", response.data);
+              
+              departures.push(response.data);
+              
+              console.log("Departures array after adding response.data:", departures);
+            } catch (error) {
+              console.error("Error fetching geocode data:", error);
+              res.status(500).json({ error: "Internal Server Error" });
+            } 
+      }; // end of for loop
+      res.json(departures);
+    })
+    .catch((error) => {
+      console.error("Error fetching data: ", error);
+      res.status(500).send("Failed to fetch data");
+    });
+});
 
 app.get("/weather", async (req, res) => {
   try {

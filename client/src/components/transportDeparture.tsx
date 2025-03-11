@@ -27,7 +27,7 @@ interface Departure {
 }
 
 const TransportDepartures = () => {
-    console.log('API Key loaded:', !!import.meta.env.VITE_TRAFIKVERKET_API_KEY);
+   // console.log('API Key loaded:', !!import.meta.env.VITE_TRAFIKVERKET_API_KEY);
     const [departures, setDepartures] = useState<Departure[]>([]);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
@@ -36,43 +36,8 @@ const TransportDepartures = () => {
 
     const findNearestStation = async (latitude: number, longitude: number) => {
         try {
-            const requestBody = `<REQUEST>
-    <LOGIN authenticationkey="${import.meta.env.VITE_TRAFIKVERKET_API_KEY}" />
-    <QUERY objecttype="TrainStation" schemaversion="1.0">
-        <FILTER>
-            <AND>
-                <EXISTS name="Advertised" value="true" />
-                <EQ name="Deleted" value="false" />
-            </AND>
-        </FILTER>
-        <INCLUDE>Prognosticated</INCLUDE>
-        <INCLUDE>AdvertisedLocationName</INCLUDE>
-        <INCLUDE>LocationSignature</INCLUDE>
-        <INCLUDE>Latitude</INCLUDE>
-        <INCLUDE>Longitude</INCLUDE>
-    </QUERY>
-</REQUEST>`;
-
-            console.log('Station search request:', requestBody);
-
-            const response = await axios.post(
-                'https://api.trafikinfo.trafikverket.se/v2/data.xml',
-                requestBody,
-                {
-                    headers: {
-                        'Content-Type': 'text/xml',
-                        'Accept': 'application/xml'
-                    }
-                }
-            );
-
-            console.log('Station search response:', response.data);
-
-            const parser = new XMLParser({
-                ignoreAttributes: false,
-                attributeNamePrefix: ""
-            });
-            const result = parser.parse(response.data);
+            // PSEUDO CODE, get departures for all stations from server
+            const result = {RESPONSE: {RESULT: [{TrainStation: [{LocationSignature: '17.9479 58.9035', AdvertisedLocationName: 'Stockholm Central', Latitude: 59.3307, Longitude: 18.0586, Prognosticated: true}]}]}};
             
             if (result?.RESPONSE?.RESULT?.[0]?.TrainStation) {
                 const stations: Station[] = Array.isArray(result.RESPONSE.RESULT[0].TrainStation) 
