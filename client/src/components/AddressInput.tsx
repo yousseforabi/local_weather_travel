@@ -9,11 +9,13 @@ type Suggestion = {
 };
 
 const AddressInput = () => {
+  
   const { setSelectedAddress, setCoordinates, selectedAddress, coordinates } = useContext(AddressContext)!;
   const [address, setAddress] = useState("");
   const [error, setError] = useState<string>("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
+
 
   const fetchWithTimeout = async (url: string, timeout = 5000, retries = 3) => {
     for (let i = 0; i < retries; i++) {
@@ -58,6 +60,14 @@ const AddressInput = () => {
       console.log("API Response:", data);
   
       if (data.status.toLowerCase() === "ok" && data.results.length > 0) {
+
+        //CARMELO>>>>
+        const coordinates = data.results[0].geometry.location;
+        console.log(`Latitudine: ${coordinates.lat}, Longitudine: ${coordinates.lng}`);
+        console.log("Final coordinates are: ", coordinates)
+        //<<<<CARMELO
+
+
         setSuggestions(data.results);
       } else {
         console.warn("First request failed, retrying...");
@@ -78,16 +88,18 @@ const AddressInput = () => {
       setLoading(false);
     }
   }, [address]);
-  
 
   const handleSelectSuggestion = (lat: number, lon: number, formattedAddress: string) => {
+    console.log("Updating coordinates:", { lat, lon });
     setCoordinates({ lat, lon });
     setSelectedAddress(formattedAddress);
+    console.log("Coordinates:", { lat, lon });
     setSuggestions([]);
   };
 
   const formatAddress = (address: string) => {
-    return address.replace(/,([^\s])/g, ", $1");
+    const formatted = address.replace(/,([^\s])/g, ", $1");
+    return formatted;
   };
 
   return (
@@ -124,7 +136,7 @@ const AddressInput = () => {
         </ul>
       )}
 
-      {selectedAddress && coordinates && (
+      {coordinates ? (
         <div>
           <h3>Selected Address:</h3>
           <p>{formatAddress(selectedAddress)}</p>
@@ -132,9 +144,11 @@ const AddressInput = () => {
           <p>Latitude: {coordinates.lat}</p>
           <p>Longitude: {coordinates.lon}</p>
         </div>
-      )}
+        ) : (
+          <p>No coordinates available.</p>
+        )}
     </div>
-  );
-};
+      );
+    };
 
 export default AddressInput;
