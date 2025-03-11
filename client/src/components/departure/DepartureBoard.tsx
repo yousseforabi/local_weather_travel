@@ -1,5 +1,6 @@
 import React from 'react';
 import DepartureCard from './DepartureCard';
+import '../../style/departure/departure.css';
 
 interface Departure {
     AdvertisedTimeAtLocation: string;

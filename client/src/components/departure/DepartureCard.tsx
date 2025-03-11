@@ -1,4 +1,5 @@
 import React from 'react';
+import '../../style/departure/departure.css';
 
 interface DepartureCardProps {
     time: string;
