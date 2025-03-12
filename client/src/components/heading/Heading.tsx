@@ -7,7 +7,7 @@ export interface HeadingProps {
 
 const Heading: React.FC<HeadingProps> = ({ label }) => {
   return (
-        <h1 className="heading">
+        <h1 className="text-2xl font-bold mb-4 text-center">
           {label}
         </h1>
   )
