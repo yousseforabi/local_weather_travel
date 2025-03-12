@@ -1,9 +1,8 @@
 import React from "react";
-import { headingComponent } from "../../types/types";
 import "../../style/heading/heading.css"
 
-interface HeadingProps {
-  label: headingComponent;
+export interface HeadingProps {
+  label: string;
 }
 
 const Heading: React.FC<HeadingProps> = ({ label }) => {
