@@ -40,7 +40,7 @@ const Traffic: React.FC = () => {
             Id: firstSituation.Id,
             CountryCode: firstSituation.CountryCode,
             PublicationTime: firstSituation.PublicationTime,
-            Description: firstSituation.Description || "No description available",
+            Description: firstSituation.locationdescriptor || "No description available",
             Message: firstDeviation || "No specific message available",
             Icon: firstIcon
           });
