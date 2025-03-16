@@ -1,0 +1,17 @@
+.current-weather {
+  max-width: 400px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.time {
+  font-style: italic;
+  font-size: 12px;
+}
+
+.temp {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
