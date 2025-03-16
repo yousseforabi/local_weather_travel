@@ -4,7 +4,7 @@ const axios = require("axios");
 const dotenv = require("dotenv");
 const fetch = require("node-fetch");
 const bodyParser = require("body-parser");
-const getCityWeather = require("./weather");
+const { getCityWeather, getCityWeatherForecast } = require("./weather");
 
 require("dotenv").config();
 
@@ -21,9 +21,10 @@ let frontendCoordinates = {};
 
 const API_URL = process.env.TRAFIKVERKET_API_URL;
 const AUTH_KEY = process.env.TRAFIKVERKET_API_KEY;
+const WEATHER_API_KEY = process.env.OPEN_WEATHER_API_KEY;
 
 app.get("/fetchDataTrafficSituation", (req, res) => {
-  const { lat, lon } = req.query; 
+  const { lat, lon } = req.query;
 
   if (!lat || !lon) {
     return res.status(400).json({ error: "Missing coordinates" });
@@ -56,10 +57,22 @@ app.get("/fetchDataTrafficSituation", (req, res) => {
     });
 });
 
-
 app.get("/weather", async (req, res) => {
   try {
-    const response = await getCityWeather(req.query.city);
+    const response = await getCityWeather(req.query.city, WEATHER_API_KEY);
+    return res.json(response);
+  } catch (error) {
+    console.error(error);
+    res.status(400).send(error.message);
+  }
+});
+
+app.get("/forecast", async (req, res) => {
+  try {
+    const response = await getCityWeatherForecast(
+      req.query.city,
+      WEATHER_API_KEY
+    );
     return res.json(response);
   } catch (error) {
     console.error(error);
