@@ -1,5 +1,4 @@
 import React from "react";
-import "../../style/heading/heading.css"
 
 export interface HeadingProps {
   label: string;

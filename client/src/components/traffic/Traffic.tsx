@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useContext } from "react";
+import { useAddressStore } from "../../store/store";
 import axios from "axios";
 import Heading from "../heading/Heading";
-import { AddressContext } from "../../context/AddressContext";
+// import { AddressContext } from "../../context/AddressContext";
 
 type TrafficData = {
   Id: string;
@@ -13,7 +14,11 @@ type TrafficData = {
 };
 
 const Traffic: React.FC = () => {
-  const { coordinates } = useContext(AddressContext)!;
+  //const { coordinates } = useContext(AddressContext)!;
+
+  //use zustand instead context
+  const coordinates = useAddressStore((state) => state.coordinates);
+  
   const [data, setData] = useState<TrafficData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
