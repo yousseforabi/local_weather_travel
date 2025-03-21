@@ -21,7 +21,7 @@ let frontendCoordinates = {};
 
 const API_URL = process.env.TRAFIKVERKET_API_URL;
 const AUTH_KEY = process.env.TRAFIKVERKET_API_KEY;
-const WEATHER_API_KEY = process.env.OPEN_WEATHER_API_KEY;
+const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 
 app.get("/fetchDataTrafficSituation", (req, res) => {
   const { lat, lon } = req.query;
