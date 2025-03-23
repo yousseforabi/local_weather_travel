@@ -4,3 +4,4 @@ export interface Departure {
     destination: string;
   }
   
+  

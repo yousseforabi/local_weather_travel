@@ -11,6 +11,7 @@ type Suggestion = {
 const AddressInput = () => {
   
   const { setSelectedAddress, setCoordinates, selectedAddress, coordinates } = useContext(AddressContext)!;
+
   const [address, setAddress] = useState("");
   const [error, setError] = useState<string>("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);

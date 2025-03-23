@@ -21,3 +21,10 @@ The server receives the latitude and longitude and uses these to create an XML s
 The server sends the XML string via a POST request to the Trafikverket API with the appropriate authenticationkey and Content-Type.
 
 Response: The response from the Trafikverket API is logged and then sent back to the client in JSON format. If there is an error, the server sends a 500 status code and an error message.
+
+Week 2:
+I started the week by figuring out how to pass the coordinates to the component. Importing the context into the component didn’t help much, as the component was still unable to access the data. The issue was in the AddressInput component, which didn’t have a specific value assigned for the coordinates. After a few attempts, I was able to fix the problem.
+The stakeholder decided to implement Tailwind CSS for styling and Zustand for state management. I proceeded with installing Tailwind, configuring tailwind.config.js with some default values, and styling my component.
+Additionally, I started reading the documentation for Zustand to understand how it works.
+Plan for Week 3:
+I will implement the state management library.
