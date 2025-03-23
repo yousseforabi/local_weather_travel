@@ -5,6 +5,8 @@ const dotenv = require("dotenv");
 const fetch = require("node-fetch");
 const bodyParser = require("body-parser");
 const getCityWeather = require("./weather");
+const proj4 = require('proj4');
+
 
 require("dotenv").config();
 
@@ -18,6 +20,9 @@ app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
 let frontendCoordinates = {};
+// Configure the projection for SWEREF99TM required by Trafikverket API
+proj4.defs("EPSG:3006", "+proj=utm +zone=33 +ellps=GRS80 +units=m +no_defs");
+
 
 const API_URL = process.env.TRAFIKVERKET_API_URL;
 const AUTH_KEY = process.env.TRAFIKVERKET_API_KEY;
@@ -132,26 +137,27 @@ app.get("/findNearestStation", async (req, res) => {
   const { lat, lon } = req.query;
 
   if (!lat || !lon) {
-    return res.status(400).json({ error: "Missing coordinates" });
+      return res.status(400).json({ error: "Missing coordinates" });
   }
 
-  const xmlData = `<REQUEST>
-    <LOGIN authenticationkey="${AUTH_KEY}" />
-    <QUERY objecttype="TrainStation" schemaversion="1.0">
-        <FILTER>
-            <AND>
-                <EXISTS name="Advertised" value="true" />
-                <EQ name="Deleted" value="false" />
-            </AND>
-        </FILTER>
-        <INCLUDE>Prognosticated</INCLUDE>
-        <INCLUDE>AdvertisedLocationName</INCLUDE>
-        <INCLUDE>LocationSignature</INCLUDE>
-        <INCLUDE>Latitude</INCLUDE>
-        <INCLUDE>Longitude</INCLUDE>
-    </QUERY>
-  </REQUEST>`;
+  // Convert coordinates
+  const { x, y } = convertToSWEREF99TM(parseFloat(lat), parseFloat(lon));
 
+  // Compose XML with NEAR tag
+  const xmlData = `<REQUEST>
+      <LOGIN authenticationkey="${AUTH_KEY}" />
+      <QUERY objecttype="TrainStation" schemaversion="1.0">
+          <FILTER>
+              <NEAR name="Geometry.SWEREF99TM" value="${x} ${y}" mindistance="1" maxdistance="20" />
+          </FILTER>
+          <INCLUDE>Prognosticated</INCLUDE>
+          <INCLUDE>AdvertisedLocationName</INCLUDE>
+          <INCLUDE>LocationSignature</INCLUDE>
+          <INCLUDE>Latitude</INCLUDE>
+          <INCLUDE>Longitude</INCLUDE>
+      </QUERY>
+  </REQUEST>`;
+  console.log("XML DATA:", xmlData);
   try {
     const response = await axios.post(API_URL, xmlData, {
       headers: {
@@ -159,6 +165,8 @@ app.get("/findNearestStation", async (req, res) => {
         "Accept": "application/xml"
       }
     });
+
+    console.log("RESPONSE FROM TRAFIKVERKET API:", response.data);
 
     const stations = response.data?.RESPONSE?.RESULT?.[0]?.TrainStation || [];
     if (!Array.isArray(stations)) {
@@ -254,6 +262,17 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
       Math.sin(dLon/2) * Math.sin(dLon/2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
+}
+
+// Helper function to convert coordinates to SWEREF99TM
+function convertToSWEREF99TM(lat, lon) {
+  // WGS84 is the default projection in proj4
+  const wgs84 = proj4.defs('WGS84');
+  const sweref99tm = proj4.defs('EPSG:3006');
+
+  // Convert coordinates
+  const [x, y] = proj4(wgs84, sweref99tm, [lon, lat]);
+  return { x, y };
 }
 
 app.listen(8080, () => {
