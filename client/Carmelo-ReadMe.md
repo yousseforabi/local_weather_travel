@@ -26,5 +26,9 @@ Week 2:
 I started the week by figuring out how to pass the coordinates to the component. Importing the context into the component didn’t help much, as the component was still unable to access the data. The issue was in the AddressInput component, which didn’t have a specific value assigned for the coordinates. After a few attempts, I was able to fix the problem.
 The stakeholder decided to implement Tailwind CSS for styling and Zustand for state management. I proceeded with installing Tailwind, configuring tailwind.config.js with some default values, and styling my component.
 Additionally, I started reading the documentation for Zustand to understand how it works.
+
 Plan for Week 3:
 I will implement the state management library.
+
+Week 3:
+Created the Store and implemented Zustand in traffic component

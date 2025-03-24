@@ -4,13 +4,9 @@ const axios = require("axios");
 const dotenv = require("dotenv");
 const fetch = require("node-fetch");
 const bodyParser = require("body-parser");
-<<<<<<< HEAD
 const getCityWeather = require("./weather");
 const proj4 = require('proj4');
 
-=======
-const { getCityWeather, getCityWeatherForecast } = require("./weather");
->>>>>>> 6af889472a046708cc6fef692bc5d3d867ec1201
 
 require("dotenv").config();
 
@@ -66,11 +62,6 @@ app.get("/fetchDataTrafficSituation", (req, res) => {
     });
 });
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 6af889472a046708cc6fef692bc5d3d867ec1201
 app.get("/weather", async (req, res) => {
   try {
     const response = await getCityWeather(req.query.city, WEATHER_API_KEY);

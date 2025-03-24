@@ -1,11 +1,10 @@
 import { AddressProvider } from "./context/AddressProvider";
 import AddressInput from "./components/AddressInput";
-import Traffic from "../components/traffic/Traffic";
 import TransportDeparture from "./components/departure/TransportDeparture";
-
-import TransportDepartures from "../components/transportDeparture";
-import "./index.css";
+import Traffic from "./components/traffic/Traffic";
 import WeatherComponent from "./components/weather/Weather";
+import "./index.css";
+
 const App = () => {
   return (
     <>
@@ -27,7 +26,7 @@ const App = () => {
         </h1>
         <div className="space-y-4">
           <AddressInput />
-          <TransportDepartures />
+          <TransportDeparture />
           <Traffic />
           <WeatherComponent city="Stockholm" />{" "}
           {/* Have to integrate with coordinates from AddressInput component*/}
