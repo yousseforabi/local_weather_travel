@@ -26,17 +26,9 @@ const App = () => {
           >
             <TransportDeparture />
           </div>
-        </div>
-        <h1 className="text-2xl font-bold mb-4">
-          Local Travel & Weather Dashboard
-        </h1>
-        <div className="space-y-4">
-          <AddressInput />
-          {/* <TransportDepartures />*/}
-          {/** ToDo: Not sure if this component is needed */}
-          <Traffic />
-          <WeatherComponent city="Stockholm" />{" "}
-          {/* Have to integrate with coordinates from AddressInput component*/}
+          <div className="weather-component" style={{ marginBottom: "20px" }}>
+            <WeatherComponent />
+          </div>
         </div>
       </AddressProvider>
     </>

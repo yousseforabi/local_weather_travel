@@ -62,7 +62,8 @@ app.get("/fetchDataTrafficSituation", (req, res) => {
 
 app.get("/weather", async (req, res) => {
   try {
-    const response = await getCityWeather(req.query.city, WEATHER_API_KEY);
+    const { lat, lon } = req.query;
+    const response = await getCityWeather(lat, lon, WEATHER_API_KEY);
     return res.json(response);
   } catch (error) {
     console.error(error);
@@ -72,10 +73,8 @@ app.get("/weather", async (req, res) => {
 
 app.get("/forecast", async (req, res) => {
   try {
-    const response = await getCityWeatherForecast(
-      req.query.city,
-      WEATHER_API_KEY
-    );
+    const { lat, lon } = req.query;
+    const response = await getCityWeatherForecast(lat, lon, WEATHER_API_KEY);
     return res.json(response);
   } catch (error) {
     console.error(error);

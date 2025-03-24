@@ -1,5 +1,6 @@
 import { useState, useCallback, useContext } from "react";
 import { AddressContext } from "../context/AddressContext";
+import { useAddressStore } from "../store/store";
 
 type Suggestion = {
   formatted_address: string;
@@ -9,14 +10,15 @@ type Suggestion = {
 };
 
 const AddressInput = () => {
-  
-  const { setSelectedAddress, setCoordinates, selectedAddress, coordinates } = useContext(AddressContext)!;
+  const { setSelectedAddress, selectedAddress, coordinates } =
+    useContext(AddressContext)!;
+
+  const { setCoordinates } = useAddressStore();
 
   const [address, setAddress] = useState("");
   const [error, setError] = useState<string>("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
-
 
   const fetchWithTimeout = async (url: string, timeout = 5000, retries = 3) => {
     for (let i = 0; i < retries; i++) {
@@ -27,7 +29,8 @@ const AddressInput = () => {
         const response = await fetch(url, { signal: controller.signal });
         clearTimeout(id);
 
-        if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+        if (!response.ok)
+          throw new Error(`Request failed with status: ${response.status}`);
 
         return await response.json();
       } catch (err) {
@@ -37,7 +40,8 @@ const AddressInput = () => {
         } else {
           console.error("Unknown error occurred");
         }
-        if (i === retries - 1) throw new Error("Failed after multiple attempts");
+        if (i === retries - 1)
+          throw new Error("Failed after multiple attempts");
       }
     }
   };
@@ -47,44 +51,48 @@ const AddressInput = () => {
       setError("Please enter an address");
       return;
     }
-  
+
     setError("");
     setLoading(true);
-  
-    const apiUrl = `http://localhost:8080/geocode?address=${encodeURIComponent(address)}`;
-    let retries = 3; 
-  
+
+    const apiUrl = `http://localhost:8080/geocode?address=${encodeURIComponent(
+      address
+    )}`;
+    let retries = 3;
+
     while (retries > 0) {
       try {
-        await new Promise((resolve) => setTimeout(resolve, 1000)); 
-  
         const data = await fetchWithTimeout(apiUrl);
         console.log("API Response:", data);
-  
+
         if (data.status.toLowerCase() === "ok" && data.results.length > 0) {
           const coordinates = data.results[0].geometry.location;
-          console.log(`Latitudine: ${coordinates.lat}, Longitudine: ${coordinates.lng}`);
+          console.log(
+            `Latitudine: ${coordinates.lat}, Longitudine: ${coordinates.lng}`
+          );
           console.log("Final coordinates are: ", coordinates);
-  
+
+          setCoordinates({
+            lat: coordinates.lat,
+            lon: coordinates.lng,
+          });
           setSuggestions(data.results);
           setLoading(false);
-          return;  
+          // Set retries to 0 on successful api call
+          retries = 0;
         }
-  
       } catch (err) {
         console.error("Error fetching coordinates:", err);
       }
-  
+
       console.warn(`Request failed, retrying... (${retries - 1} retries left)`);
-      await new Promise((resolve) => setTimeout(resolve, 2000)); 
       retries--;
     }
-  
+
     setError("Address not found or unavailable after multiple attempts.");
     setSuggestions([]);
     setLoading(false);
   }, [address]);
-  
 
   const sendCoordinatesToBackend = async (lat: number, lon: number) => {
     try {
@@ -106,7 +114,11 @@ const AddressInput = () => {
     }
   };
 
-  const handleSelectSuggestion = async (lat: number, lon: number, formattedAddress: string) => {
+  const handleSelectSuggestion = async (
+    lat: number,
+    lon: number,
+    formattedAddress: string
+  ) => {
     setCoordinates({ lat, lon });
     setSelectedAddress(formattedAddress);
     console.log("Coordinates:", { lat, lon });
@@ -162,11 +174,11 @@ const AddressInput = () => {
           <p>Latitude: {coordinates.lat}</p>
           <p>Longitude: {coordinates.lon}</p>
         </div>
-        ) : (
-          <p>No coordinates available.</p>
-        )}
+      ) : (
+        <p>No coordinates available.</p>
+      )}
     </div>
-      );
-    };
+  );
+};
 
 export default AddressInput;

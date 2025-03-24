@@ -6,12 +6,11 @@ import {
   WeatherTodayResponse,
 } from "../../types/weather";
 import "./Weather.css";
+import { useAddressStore } from "../../store/store";
 
-type WeatherComponentProps = {
-  city: string;
-};
+const WeatherComponent = () => {
+  const coordinates = useAddressStore((state) => state.coordinates);
 
-const WeatherComponent = ({ city }: WeatherComponentProps) => {
   const [currentWeather, setCurrentWeather] =
     useState<WeatherTodayResponse | null>(null);
   const [weatherData, setWeatherData] = useState<WeatherForecastDay[]>([]);
@@ -19,17 +18,19 @@ const WeatherComponent = ({ city }: WeatherComponentProps) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!coordinates) return;
+
     const fetchWeatherData = async () => {
       setLoading(true);
       setError(null);
       try {
         const currentWeatherResponse = await axios.get(
-          `http://localhost:8080/weather?city=${city}`
+          `http://localhost:8080/weather?lat=${coordinates.lat}&lon=${coordinates.lon}`
         );
         setCurrentWeather(currentWeatherResponse.data);
 
         const forecastResponse = await axios.get(
-          `http://localhost:8080/forecast?city=${city}`
+          `http://localhost:8080/forecast?lat=${coordinates.lat}&lon=${coordinates.lon}`
         );
 
         processForecastData(forecastResponse.data.list);
@@ -41,7 +42,7 @@ const WeatherComponent = ({ city }: WeatherComponentProps) => {
     };
 
     fetchWeatherData();
-  }, [city]);
+  }, [coordinates]);
 
   const processForecastData = (list: List[]) => {
     const processedData: WeatherForecastDay[] = [];
