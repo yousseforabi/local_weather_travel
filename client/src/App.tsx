@@ -1,9 +1,9 @@
 import { AddressProvider } from "./context/AddressProvider";
 import AddressInput from "./components/AddressInput";
-import Traffic from "./components/traffic/Traffic";
+import Traffic from "../components/traffic/Traffic";
 import TransportDeparture from "./components/departure/TransportDeparture";
 
-import TransportDepartures from "./components/transportDeparture";
+import TransportDepartures from "../components/transportDeparture";
 import "./index.css";
 import WeatherComponent from "./components/weather/Weather";
 const App = () => {
