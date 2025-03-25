@@ -4,9 +4,8 @@ const axios = require("axios");
 const dotenv = require("dotenv");
 const fetch = require("node-fetch");
 const bodyParser = require("body-parser");
-const getCityWeather = require("./weather");
-const proj4 = require('proj4');
-
+const proj4 = require("proj4");
+const { getCityWeather, getCityWeatherForecast } = require("./weather");
 
 require("dotenv").config();
 
@@ -22,7 +21,6 @@ app.use(bodyParser.json());
 let frontendCoordinates = {};
 // Configure the projection for SWEREF99TM required by Trafikverket API
 proj4.defs("EPSG:3006", "+proj=utm +zone=33 +ellps=GRS80 +units=m +no_defs");
-
 
 const API_URL = process.env.TRAFIKVERKET_API_URL;
 const AUTH_KEY = process.env.TRAFIKVERKET_API_KEY;
@@ -64,7 +62,8 @@ app.get("/fetchDataTrafficSituation", (req, res) => {
 
 app.get("/weather", async (req, res) => {
   try {
-    const response = await getCityWeather(req.query.city, WEATHER_API_KEY);
+    const { lat, lon } = req.query;
+    const response = await getCityWeather(lat, lon, WEATHER_API_KEY);
     return res.json(response);
   } catch (error) {
     console.error(error);
@@ -74,10 +73,8 @@ app.get("/weather", async (req, res) => {
 
 app.get("/forecast", async (req, res) => {
   try {
-    const response = await getCityWeatherForecast(
-      req.query.city,
-      WEATHER_API_KEY
-    );
+    const { lat, lon } = req.query;
+    const response = await getCityWeatherForecast(lat, lon, WEATHER_API_KEY);
     return res.json(response);
   } catch (error) {
     console.error(error);
@@ -149,7 +146,7 @@ app.get("/findNearestStation", async (req, res) => {
   const { lat, lon } = req.query;
 
   if (!lat || !lon) {
-      return res.status(400).json({ error: "Missing coordinates" });
+    return res.status(400).json({ error: "Missing coordinates" });
   }
 
   // Convert coordinates
@@ -174,8 +171,8 @@ app.get("/findNearestStation", async (req, res) => {
     const response = await axios.post(API_URL, xmlData, {
       headers: {
         "Content-Type": "text/xml",
-        "Accept": "application/xml"
-      }
+        Accept: "application/xml",
+      },
     });
 
     console.log("RESPONSE FROM TRAFIKVERKET API:", response.data);
@@ -186,27 +183,30 @@ app.get("/findNearestStation", async (req, res) => {
     }
 
     // Find the nearest station
-    const nearestStation = stations.reduce((nearest, station) => {
-      const distance = calculateDistance(
-        parseFloat(lat),
-        parseFloat(lon),
-        station.Latitude,
-        station.Longitude
-      );
-      return (!nearest || distance < nearest.distance)
-        ? { station, distance }
-        : nearest;
-    }, { station: null, distance: Infinity });
+    const nearestStation = stations.reduce(
+      (nearest, station) => {
+        const distance = calculateDistance(
+          parseFloat(lat),
+          parseFloat(lon),
+          station.Latitude,
+          station.Longitude
+        );
+        return !nearest || distance < nearest.distance
+          ? { station, distance }
+          : nearest;
+      },
+      { station: null, distance: Infinity }
+    );
 
     if (nearestStation.station) {
       res.json(nearestStation.station);
     } else {
       res.json({
-        LocationSignature: 'Cst',
-        AdvertisedLocationName: 'Stockholm Central',
+        LocationSignature: "Cst",
+        AdvertisedLocationName: "Stockholm Central",
         Latitude: 59.3307,
         Longitude: 18.0586,
-        Prognosticated: true
+        Prognosticated: true,
       });
     }
   } catch (error) {
@@ -252,8 +252,8 @@ app.get("/trainDepartures", async (req, res) => {
     const response = await axios.post(API_URL, xmlData, {
       headers: {
         "Content-Type": "text/xml",
-        "Accept": "application/xml"
-      }
+        Accept: "application/xml",
+      },
     });
 
     res.json(response.data);
@@ -266,21 +266,23 @@ app.get("/trainDepartures", async (req, res) => {
 // Helper function to calculate distance between coordinates
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Earth's radius in kilometers
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
 // Helper function to convert coordinates to SWEREF99TM
 function convertToSWEREF99TM(lat, lon) {
   // WGS84 is the default projection in proj4
-  const wgs84 = proj4.defs('WGS84');
-  const sweref99tm = proj4.defs('EPSG:3006');
+  const wgs84 = proj4.defs("WGS84");
+  const sweref99tm = proj4.defs("EPSG:3006");
 
   // Convert coordinates
   const [x, y] = proj4(wgs84, sweref99tm, [lon, lat]);

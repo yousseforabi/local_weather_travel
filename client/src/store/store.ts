@@ -1,4 +1,4 @@
-import {create} from 'zustand';
+import { create } from "zustand";
 
 //define type store
 type AddressStoreType = {
@@ -10,9 +10,9 @@ type AddressStoreType = {
 
 //create the store
 export const useAddressStore = create<AddressStoreType>((set) => ({
-    selectedAddress: "",
-    coordinates: null,
+  selectedAddress: "",
+  coordinates: null,
 
-    setSelectedAddress: (address) => set({selectedAddress: address}),
-    setCoordinates: (coords) => set({coordinates: coords}),
-}))
+  setSelectedAddress: (address) => set({ selectedAddress: address }),
+  setCoordinates: (coords) => set({ coordinates: coords }),
+}));
