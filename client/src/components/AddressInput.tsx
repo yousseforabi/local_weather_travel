@@ -1,5 +1,4 @@
-import { useState, useCallback, useContext } from "react";
-import { AddressContext } from "../context/AddressContext";
+import { useState, useCallback } from "react";
 import { useAddressStore } from "../store/store";
 
 type Suggestion = {
@@ -10,12 +9,14 @@ type Suggestion = {
 };
 
 const AddressInput = () => {
-  const { setSelectedAddress, selectedAddress, coordinates } =
-    useContext(AddressContext)!;
-
-  const { setCoordinates } = useAddressStore();
-
-  const [address, setAddress] = useState("");
+  // Using Zustand store to manage state
+  const coordinates = useAddressStore((state) => state.coordinates);
+  const setCoordinates = useAddressStore((state) => state.setCoordinates);
+  const selectedAddress = useAddressStore((state) => state.selectedAddress);
+  const setSelectedAddress = useAddressStore((state) => state.setSelectedAddress);
+  const address = useAddressStore((state) => state.address);
+  const setAddress = useAddressStore((state) => state.setAddress);
+  
   const [error, setError] = useState<string>("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
@@ -29,8 +30,7 @@ const AddressInput = () => {
         const response = await fetch(url, { signal: controller.signal });
         clearTimeout(id);
 
-        if (!response.ok)
-          throw new Error(`Request failed with status: ${response.status}`);
+        if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
 
         return await response.json();
       } catch (err) {
@@ -40,8 +40,7 @@ const AddressInput = () => {
         } else {
           console.error("Unknown error occurred");
         }
-        if (i === retries - 1)
-          throw new Error("Failed after multiple attempts");
+        if (i === retries - 1) throw new Error("Failed after multiple attempts");
       }
     }
   };
@@ -55,37 +54,32 @@ const AddressInput = () => {
     setError("");
     setLoading(true);
 
-    const apiUrl = `http://localhost:8080/geocode?address=${encodeURIComponent(
-      address
-    )}`;
+    const apiUrl = `http://localhost:8080/geocode?address=${encodeURIComponent(address)}`;
     let retries = 3;
 
     while (retries > 0) {
       try {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
         const data = await fetchWithTimeout(apiUrl);
         console.log("API Response:", data);
 
         if (data.status.toLowerCase() === "ok" && data.results.length > 0) {
           const coordinates = data.results[0].geometry.location;
-          console.log(
-            `Latitudine: ${coordinates.lat}, Longitudine: ${coordinates.lng}`
-          );
+          console.log(`Latitudine: ${coordinates.lat}, Longitudine: ${coordinates.lng}`);
           console.log("Final coordinates are: ", coordinates);
 
-          setCoordinates({
-            lat: coordinates.lat,
-            lon: coordinates.lng,
-          });
           setSuggestions(data.results);
           setLoading(false);
-          // Set retries to 0 on successful api call
-          retries = 0;
+          return;
         }
+
       } catch (err) {
         console.error("Error fetching coordinates:", err);
       }
 
       console.warn(`Request failed, retrying... (${retries - 1} retries left)`);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       retries--;
     }
 
@@ -114,11 +108,7 @@ const AddressInput = () => {
     }
   };
 
-  const handleSelectSuggestion = async (
-    lat: number,
-    lon: number,
-    formattedAddress: string
-  ) => {
+  const handleSelectSuggestion = async (lat: number, lon: number, formattedAddress: string) => {
     setCoordinates({ lat, lon });
     setSelectedAddress(formattedAddress);
     console.log("Coordinates:", { lat, lon });
@@ -133,51 +123,59 @@ const AddressInput = () => {
   };
 
   return (
-    <div>
-      <h2>Enter Address</h2>
-      <input
-        type="text"
-        placeholder="Enter your address"
-        value={address}
-        onChange={(e) => setAddress(e.target.value)}
-      />
-      <button onClick={fetchCoordinates} disabled={loading}>
-        {loading ? "Loading..." : "Get Coordinates"}
-      </button>
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      {suggestions.length > 0 && (
-        <ul>
-          {suggestions.map((result, index) => (
-            <li
-              key={index}
-              onClick={() =>
-                handleSelectSuggestion(
-                  result.geometry.location.lat,
-                  result.geometry.location.lng,
-                  result.formatted_address
-                )
-              }
-            >
-              {formatAddress(result.formatted_address)}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {coordinates ? (
-        <div>
-          <h3>Selected Address:</h3>
-          <p>{formatAddress(selectedAddress)}</p>
-          <h4>Coordinates:</h4>
-          <p>Latitude: {coordinates.lat}</p>
-          <p>Longitude: {coordinates.lon}</p>
-        </div>
-      ) : (
-        <p>No coordinates available.</p>
-      )}
-    </div>
+    <section className="w-full flex flex-col items-center justify-center m-auto p-6 bg-background rounded-lg shadow-md">
+      <h2 className="text-xl font-semibold text-text mb-4">Local Travel & Weather Dashboard</h2>
+      <section className="flex items-baseline w-[500px] justify-between">
+        <input
+          type="text"
+          placeholder="Enter your address"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          className="w-3/5 p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+          onClick={fetchCoordinates}
+          disabled={loading}
+          className={`px-9 py-3 rounded-lg text-white font-semibold ${
+            loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+          }`}
+        >
+        {loading ? "Loading..." : "SEARCH"}
+        </button>
+      </section>
+  
+    {error && <p className="text-red-600 font-semibold mt-2">{error}</p>}
+  
+    {suggestions.length > 0 && (
+      <ul className="w-full mt-4 border border-gray-300 rounded-lg bg-white">
+        {suggestions.map((result, index) => (
+          <li
+            key={index}
+            onClick={() =>
+              handleSelectSuggestion(
+                result.geometry.location.lat,
+                result.geometry.location.lng,
+                result.formatted_address
+              )
+            }
+            className="p-3 border-b last:border-none hover:bg-gray-100 cursor-pointer"
+          >
+            {formatAddress(result.formatted_address)}
+          </li>
+        ))}
+      </ul>
+    )}
+  
+    {/*{coordinates && (
+      <div className="mt-4 w-full text-center bg-foreground p-4 rounded-lg">
+        <h3 className="text-lg font-semibold">Selected Address:</h3>
+        <p className="text-sm">{formatAddress(selectedAddress)}</p>
+        <h4 className="text-lg font-semibold mt-2">Coordinates:</h4>
+        <p className="text-sm">Latitude: {coordinates.lat}</p>
+        <p className="text-sm">Longitude: {coordinates.lon}</p>
+      </div>
+    )}*/}
+  </section>  
   );
 };
 
