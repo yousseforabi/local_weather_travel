@@ -10,9 +10,7 @@ type Suggestion = {
 
 const AddressInput = () => {
   // Using Zustand store to manage state
-  const coordinates = useAddressStore((state) => state.coordinates);
   const setCoordinates = useAddressStore((state) => state.setCoordinates);
-  const selectedAddress = useAddressStore((state) => state.selectedAddress);
   const setSelectedAddress = useAddressStore((state) => state.setSelectedAddress);
   const address = useAddressStore((state) => state.address);
   const setAddress = useAddressStore((state) => state.setAddress);
