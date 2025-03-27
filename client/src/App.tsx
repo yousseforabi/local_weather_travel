@@ -12,7 +12,7 @@ const App = () => {
           <ErrorBoundary>
             <AddressInput />
           </ErrorBoundary>
-          {/*<TransportDeparture />*/}
+          <TransportDeparture />
           <WeatherComponent />
           <MapTraffic />
         </div>

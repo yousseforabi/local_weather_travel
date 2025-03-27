@@ -2,21 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useAddressStore } from "../../store/store";
 import axios from "axios";
 import Heading from "../heading/Heading";
+import { TrafficData, TrafficApiResponse } from "../../types/types";
 
-type TrafficData = {
-  Id: string;
-  CountryCode: string;
-  PublicationTime: string;
-  Description: string;
-  Message?: string;
-  Icon?: string;
-};
 
 const Traffic: React.FC = () => {
-
   const defaultCoordinates = { lat: 59.32671282807284, lon: 18.022816125917494 };
 
-  // Getting coordinates from the store
   const coordinates = useAddressStore((state) => state.coordinates);
 
   const [data, setData] = useState<TrafficData | null>(null);
@@ -32,15 +23,15 @@ const Traffic: React.FC = () => {
         const lat = coordinates?.lat || defaultCoordinates.lat;
         const lon = coordinates?.lon || defaultCoordinates.lon;
 
-        const response = await axios.get(
+        const response = await axios.get<TrafficApiResponse>(
           `http://localhost:8080/fetchDataTrafficSituation?lat=${lat}&lon=${lon}`
         );
 
         console.log("Traffic API Response:", response.data);
 
         const firstSituation = response.data.RESPONSE?.RESULT?.[0]?.Situation?.[0];
-        const firstDeviation = response.data.RESPONSE?.RESULT?.[0]?.Situation?.[0].Deviation[0].Message;
-        const firstIcon = response.data.RESPONSE?.RESULT?.[0]?.Situation?.[0].Deviation[0].IconId;
+        const firstDeviation = firstSituation?.Deviation?.[0]?.Message;
+        const firstIcon = firstSituation?.Deviation?.[0]?.IconId;
 
         if (firstSituation) {
           setData({
@@ -64,7 +55,7 @@ const Traffic: React.FC = () => {
     };
 
     fetchTrafficData();
-  }, [coordinates]); 
+  }, [coordinates]); // Re-fetch when coordinates change
   
   if (loading) {
     return (
