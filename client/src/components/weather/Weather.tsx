@@ -100,8 +100,8 @@ const WeatherComponent = () => {
           </tr>
         </thead>
         <tbody>
-          {weatherData.map((weather) => (
-            <tr className="odd:bg-gray-100 even:bg-gray-200">
+          {weatherData.map((weather, index) => (
+            <tr key={index} className="odd:bg-gray-100 even:bg-gray-200">
               <td className="w-1/4 px-2 py-2">{weather.day}</td>
               <td className="w-1/4 px-2 py-2 text-center">
                 {weather.temperature}

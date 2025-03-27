@@ -3,6 +3,7 @@ import axios from 'axios';
 import DepartureBoard from './DepartureBoard';
 import { AddressContext } from '../../context/AddressContext';
 import '../../style/departure/departure.css';
+import { useAddressStore } from '../../store/store';
 
 interface Station {
     LocationSignature: string;
@@ -28,8 +29,8 @@ interface Departure {
 }
 
 const TransportDeparture = () => {
-    const { coordinates } = useContext(AddressContext)!;
-    const [departures, setDepartures] = useState<Departure[]>([]);
+    const coordinates = useAddressStore((state) => state.coordinates);
+        const [departures, setDepartures] = useState<Departure[]>([]);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
     const [currentStation, setCurrentStation] = useState<Station | null>(null);
