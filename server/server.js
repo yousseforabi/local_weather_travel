@@ -236,6 +236,8 @@ app.get("/trainDepartures", async (req, res) => {
     return res.status(400).json({ error: "Station ID is required" });
   }
 
+  const [timeNow, timeInFuture] = getTimesWithFutureOffset(2);
+
   const xmlData = `<REQUEST>
     <LOGIN authenticationkey="${AUTH_KEY}" />
     <QUERY objecttype="TrainAnnouncement" orderby="AdvertisedTimeAtLocation" schemaversion="1.0">
@@ -243,13 +245,8 @@ app.get("/trainDepartures", async (req, res) => {
             <AND>
                 <EQ name="ActivityType" value="Avgang" />
                 <EQ name="LocationSignature" value="${stationId}" />
-                <OR>
-                    <AND>
-                        <GT name="AdvertisedTimeAtLocation" value="$NOW" />
-                        <LT name="AdvertisedTimeAtLocation" value="$NOW.AddHours(2)" />
-                    </AND>
-                </OR>
-                <EXISTS name="Advertised" value="true" />
+                <GT name="AdvertisedTimeAtLocation" value="${timeNow}" />
+                <LT name="AdvertisedTimeAtLocation" value="${timeInFuture}" />
                 <EQ name="Canceled" value="false" />
             </AND>
         </FILTER>
@@ -270,7 +267,10 @@ app.get("/trainDepartures", async (req, res) => {
       },
     });
 
-    res.json(response.data);
+
+    const jsonObj = parser.parse(response.data);
+    
+    res.json(jsonObj.RESPONSE.RESULT.TrainAnnouncement || []);
   } catch (error) {
     console.error("Error fetching train departures:", error);
     res.status(500).json({ error: "Failed to fetch train departures" });
@@ -310,6 +310,17 @@ function convertToSWEREF99TM(lat, lon) {
   // Convert coordinates
   const [x, y] = proj4(wgs84, sweref99tm, [lon, lat]);
   return { x, y };
+}
+
+function getTimesWithFutureOffset(hoursAhead) {
+  const now = new Date(); // Current date and time
+  const futureTime = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000); // Adds specified hours
+
+  // Convert both dates to ISO 8601 strings with 'Z' to indicate UTC time
+  const nowIso = now.toISOString();
+  const futureTimeIso = futureTime.toISOString();
+
+  return [nowIso, futureTimeIso];
 }
 
 app.listen(8080, () => {
