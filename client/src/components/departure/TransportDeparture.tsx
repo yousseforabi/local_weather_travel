@@ -15,17 +15,10 @@ interface Station {
 
 interface Departure {
     AdvertisedTimeAtLocation: string;
-    ModifiedTime: string;
-    ProductInformation: {
-        Code: string;
-        Description: string;
-    }[];
-    ToLocation: {
-        LocationName: string;
-        Priority: number;
-        Order: number;
-    }[];
-    TrackAtLocation: string;
+    FromLocation?: string;  // Added based on sample data
+    ProductInformation: (string | number)[];  // Adjusted to match sample data
+    ToLocation?: string;  // Adjusted to match sample data
+    TrackAtLocation: number;  // Adjusted type from string to number based on sample data
 }
 
 const TransportDeparture = () => {
@@ -87,9 +80,8 @@ const TransportDeparture = () => {
                 `http://localhost:8080/trainDepartures?stationId=${stationToUse.LocationSignature}`
             );
 
-            if (response.data?.RESPONSE?.RESULT?.[0]?.TrainAnnouncement) {
-                const announcements = response.data.RESPONSE.RESULT[0].TrainAnnouncement;
-                const departuresList = Array.isArray(announcements) ? announcements : [announcements];
+            if (response.data) {
+                const departuresList = Array.isArray(response.data) ? response.data : [response.data];
                 setDepartures(departuresList);
             } else {
                 setDepartures([]);

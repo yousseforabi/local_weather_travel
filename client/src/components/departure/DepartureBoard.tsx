@@ -4,17 +4,10 @@ import '../../style/departure/departure.css';
 
 interface Departure {
     AdvertisedTimeAtLocation: string;
-    ModifiedTime: string;
-    ProductInformation: {
-        Code: string;
-        Description: string;
-    }[];
-    ToLocation: {
-        LocationName: string;
-        Priority: number;
-        Order: number;
-    }[];
-    TrackAtLocation: string;
+    FromLocation: string;
+    ProductInformation: (string | number)[];
+    ToLocation: string;
+    TrackAtLocation: number;
 }
 
 interface DepartureBoardProps {
@@ -98,9 +91,10 @@ const DepartureBoard: React.FC<DepartureBoardProps> = ({
                     {departures.map((departure, index) => (
                         <DepartureCard
                             key={index}
-                            time={formatTime(departure.AdvertisedTimeAtLocation)}
-                            trainType={getTrainType(departure)}
-                            destination={getDestination(departure)}
+                            time={departure.AdvertisedTimeAtLocation}
+                            fromLocation={departure.FromLocation}
+                            trainType={departure.ProductInformation}
+                            toLocation={departure.ToLocation}
                             track={departure.TrackAtLocation}
                         />
                     ))}
