@@ -1,7 +1,6 @@
-import { useState, useEffect, useContext } from 'react';
-import axios, { AxiosError } from 'axios';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import DepartureBoard from './DepartureBoard';
-import { AddressContext } from '../../context/AddressContext';
 import '../../style/departure/departure.css';
 import { useAddressStore } from '../../store/store';
 
