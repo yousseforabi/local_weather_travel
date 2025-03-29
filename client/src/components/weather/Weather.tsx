@@ -6,12 +6,11 @@ import {
   WeatherTodayResponse,
 } from "../../types/weather";
 import "./Weather.css";
+import { useAddressStore } from "../../store/store";
 
-type WeatherComponentProps = {
-  city: string;
-};
+const WeatherComponent = () => {
+  const coordinates = useAddressStore((state) => state.coordinates);
 
-const WeatherComponent = ({ city }: WeatherComponentProps) => {
   const [currentWeather, setCurrentWeather] =
     useState<WeatherTodayResponse | null>(null);
   const [weatherData, setWeatherData] = useState<WeatherForecastDay[]>([]);
@@ -19,17 +18,19 @@ const WeatherComponent = ({ city }: WeatherComponentProps) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!coordinates) return;
+
     const fetchWeatherData = async () => {
       setLoading(true);
       setError(null);
       try {
         const currentWeatherResponse = await axios.get(
-          `http://localhost:8080/weather?city=${city}`
+          `http://localhost:8080/weather?lat=${coordinates.lat}&lon=${coordinates.lon}`
         );
         setCurrentWeather(currentWeatherResponse.data);
 
         const forecastResponse = await axios.get(
-          `http://localhost:8080/forecast?city=${city}`
+          `http://localhost:8080/forecast?lat=${coordinates.lat}&lon=${coordinates.lon}`
         );
 
         processForecastData(forecastResponse.data.list);
@@ -41,7 +42,7 @@ const WeatherComponent = ({ city }: WeatherComponentProps) => {
     };
 
     fetchWeatherData();
-  }, [city]);
+  }, [coordinates]);
 
   const processForecastData = (list: List[]) => {
     const processedData: WeatherForecastDay[] = [];
@@ -99,8 +100,8 @@ const WeatherComponent = ({ city }: WeatherComponentProps) => {
           </tr>
         </thead>
         <tbody>
-          {weatherData.map((weather) => (
-            <tr className="odd:bg-gray-100 even:bg-gray-200">
+          {weatherData.map((weather, index) => (
+            <tr key={index} className="odd:bg-gray-100 even:bg-gray-200">
               <td className="w-1/4 px-2 py-2">{weather.day}</td>
               <td className="w-1/4 px-2 py-2 text-center">
                 {weather.temperature}
