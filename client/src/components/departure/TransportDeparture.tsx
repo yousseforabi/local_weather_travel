@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import DepartureBoard from './DepartureBoard';
 import { AddressContext } from '../../context/AddressContext';
 import '../../style/departure/departure.css';
@@ -34,7 +34,7 @@ const TransportDeparture = () => {
                 `http://localhost:8080/findNearestStation?lat=${latitude}&lon=${longitude}`
             );
 
-            const station = response.data;
+            const station = response.data as Station;
             if (station) {
                 setCurrentStation(station);
                 return station;
@@ -89,9 +89,7 @@ const TransportDeparture = () => {
         } catch (error) {
             console.error('Error fetching data:', error);
             let errorMessage = 'Failed to load train departures. Please try again later.';
-            if (axios.isAxiosError(error)) {
-                errorMessage = error.response?.data?.message || error.message;
-            } else if (error instanceof Error) {
+            if (error instanceof Error) {
                 errorMessage = error.message;
             }
             setError(errorMessage);
