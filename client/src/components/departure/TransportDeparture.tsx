@@ -1,7 +1,6 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import DepartureBoard from './DepartureBoard';
-import { AddressContext } from '../../context/AddressContext';
 import '../../style/departure/departure.css';
 import { useAddressStore } from '../../store/store';
 
@@ -15,17 +14,10 @@ interface Station {
 
 interface Departure {
     AdvertisedTimeAtLocation: string;
-    ModifiedTime: string;
-    ProductInformation: {
-        Code: string;
-        Description: string;
-    }[];
-    ToLocation: {
-        LocationName: string;
-        Priority: number;
-        Order: number;
-    }[];
-    TrackAtLocation: string;
+    FromLocation?: string;  // Added based on sample data
+    ProductInformation: (string | number)[];  // Adjusted to match sample data
+    ToLocation?: string;  // Adjusted to match sample data
+    TrackAtLocation: number;  // Adjusted type from string to number based on sample data
 }
 
 const TransportDeparture = () => {
@@ -41,7 +33,7 @@ const TransportDeparture = () => {
                 `http://localhost:8080/findNearestStation?lat=${latitude}&lon=${longitude}`
             );
 
-            const station = response.data;
+            const station = response.data as Station;
             if (station) {
                 setCurrentStation(station);
                 return station;
@@ -87,9 +79,8 @@ const TransportDeparture = () => {
                 `http://localhost:8080/trainDepartures?stationId=${stationToUse.LocationSignature}`
             );
 
-            if (response.data?.RESPONSE?.RESULT?.[0]?.TrainAnnouncement) {
-                const announcements = response.data.RESPONSE.RESULT[0].TrainAnnouncement;
-                const departuresList = Array.isArray(announcements) ? announcements : [announcements];
+            if (response.data) {
+                const departuresList = Array.isArray(response.data) ? response.data : [response.data];
                 setDepartures(departuresList);
             } else {
                 setDepartures([]);
@@ -97,9 +88,7 @@ const TransportDeparture = () => {
         } catch (error) {
             console.error('Error fetching data:', error);
             let errorMessage = 'Failed to load train departures. Please try again later.';
-            if (axios.isAxiosError(error)) {
-                errorMessage = error.response?.data?.message || error.message;
-            } else if (error instanceof Error) {
+            if (error instanceof Error) {
                 errorMessage = error.message;
             }
             setError(errorMessage);
