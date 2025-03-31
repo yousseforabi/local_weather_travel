@@ -54,7 +54,7 @@ const WeatherComponent = () => {
       });
       const timeOfTheDay = new Date(item.dt * 1000).getHours();
       /* Consider only noon temperature*/
-      if (timeOfTheDay !== 13) {
+      if (timeOfTheDay < 12 || timeOfTheDay > 14) {
         return;
       }
 
@@ -94,8 +94,8 @@ const WeatherComponent = () => {
         <thead>
           <tr className="bg-gray-500">
             <th className="w-1/4 px-2 py-2">Day</th>
-            <th className="w-1/4 px-2 py-2 text-center">Artist</th>
-            <th className="w-1/4 px-2 py-2 text-center">Year</th>
+            <th className="w-1/4 px-2 py-2 text-center">Temp &#8451;</th>
+            <th className="w-1/4 px-2 py-2 text-center">Humidity</th>
             <th className="w-1/4 px-2 py-2 text-center">Weather</th>
           </tr>
         </thead>

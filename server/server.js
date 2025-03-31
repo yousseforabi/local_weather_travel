@@ -6,6 +6,8 @@ const fetch = require("node-fetch");
 const bodyParser = require("body-parser");
 const proj4 = require("proj4");
 const { getCityWeather, getCityWeatherForecast } = require("./weather");
+const { XMLParser } = require("fast-xml-parser");
+const parser = new XMLParser();
 
 require("dotenv").config();
 
@@ -157,16 +159,15 @@ app.get("/findNearestStation", async (req, res) => {
       <LOGIN authenticationkey="${AUTH_KEY}" />
       <QUERY objecttype="TrainStation" schemaversion="1.0">
           <FILTER>
-              <NEAR name="Geometry.SWEREF99TM" value="${x} ${y}" mindistance="1" maxdistance="20" />
+              <NEAR name="Geometry.SWEREF99TM" value="${x} ${y}" mindistance="1" maxdistance="2000" />
           </FILTER>
           <INCLUDE>Prognosticated</INCLUDE>
           <INCLUDE>AdvertisedLocationName</INCLUDE>
           <INCLUDE>LocationSignature</INCLUDE>
-          <INCLUDE>Latitude</INCLUDE>
-          <INCLUDE>Longitude</INCLUDE>
+          <INCLUDE>Geometry.WGS84</INCLUDE>
       </QUERY>
   </REQUEST>`;
-  console.log("XML DATA:", xmlData);
+  
   try {
     const response = await axios.post(API_URL, xmlData, {
       headers: {
@@ -175,15 +176,26 @@ app.get("/findNearestStation", async (req, res) => {
       },
     });
 
-    console.log("RESPONSE FROM TRAFIKVERKET API:", response.data);
+    const jsonObj = parser.parse(response.data);
+    
+    const stations = jsonObj.RESPONSE.RESULT.TrainStation || [];
 
-    const stations = response.data?.RESPONSE?.RESULT?.[0]?.TrainStation || [];
-    if (!Array.isArray(stations)) {
+    const transformedStations = stations.map(station => ({
+      AdvertisedLocationName: station.AdvertisedLocationName,
+      Longitude: parseCoordinates(station.Geometry.WGS84).Longitude,
+      Latitude: parseCoordinates(station.Geometry.WGS84).Latitude,
+      LocationSignature: station.LocationSignature,
+      Prognosticated: station.Prognosticated
+    }));
+
+    console.log("TRANSFORMED STATIONS FROM API RESPONSE:", transformedStations);
+
+    if (!Array.isArray(transformedStations)) {
       return res.status(500).json({ error: "Invalid station data received" });
     }
 
     // Find the nearest station
-    const nearestStation = stations.reduce(
+    const nearestStation = transformedStations.reduce(
       (nearest, station) => {
         const distance = calculateDistance(
           parseFloat(lat),
@@ -197,6 +209,8 @@ app.get("/findNearestStation", async (req, res) => {
       },
       { station: null, distance: Infinity }
     );
+
+    console.log("NEAREST STATION:", nearestStation);
 
     if (nearestStation.station) {
       res.json(nearestStation.station);
@@ -222,6 +236,8 @@ app.get("/trainDepartures", async (req, res) => {
     return res.status(400).json({ error: "Station ID is required" });
   }
 
+  const [timeNow, timeInFuture] = getTimesWithFutureOffset(2);
+
   const xmlData = `<REQUEST>
     <LOGIN authenticationkey="${AUTH_KEY}" />
     <QUERY objecttype="TrainAnnouncement" orderby="AdvertisedTimeAtLocation" schemaversion="1.0">
@@ -229,13 +245,8 @@ app.get("/trainDepartures", async (req, res) => {
             <AND>
                 <EQ name="ActivityType" value="Avgang" />
                 <EQ name="LocationSignature" value="${stationId}" />
-                <OR>
-                    <AND>
-                        <GT name="AdvertisedTimeAtLocation" value="$NOW" />
-                        <LT name="AdvertisedTimeAtLocation" value="$NOW.AddHours(2)" />
-                    </AND>
-                </OR>
-                <EXISTS name="Advertised" value="true" />
+                <GT name="AdvertisedTimeAtLocation" value="${timeNow}" />
+                <LT name="AdvertisedTimeAtLocation" value="${timeInFuture}" />
                 <EQ name="Canceled" value="false" />
             </AND>
         </FILTER>
@@ -256,7 +267,10 @@ app.get("/trainDepartures", async (req, res) => {
       },
     });
 
-    res.json(response.data);
+
+    const jsonObj = parser.parse(response.data);
+    
+    res.json(jsonObj.RESPONSE.RESULT.TrainAnnouncement || []);
   } catch (error) {
     console.error("Error fetching train departures:", error);
     res.status(500).json({ error: "Failed to fetch train departures" });
@@ -278,6 +292,15 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
+// Function to parse the POINT string and return an object with longitude and latitude
+function parseCoordinates(pointString) {
+  const coords = pointString.match(/POINT \(([^ ]+) ([^ ]+)\)/);
+  return {
+    Longitude: parseFloat(coords[1]),
+    Latitude: parseFloat(coords[2])
+  };
+}
+
 // Helper function to convert coordinates to SWEREF99TM
 function convertToSWEREF99TM(lat, lon) {
   // WGS84 is the default projection in proj4
@@ -287,6 +310,17 @@ function convertToSWEREF99TM(lat, lon) {
   // Convert coordinates
   const [x, y] = proj4(wgs84, sweref99tm, [lon, lat]);
   return { x, y };
+}
+
+function getTimesWithFutureOffset(hoursAhead) {
+  const now = new Date(); // Current date and time
+  const futureTime = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000); // Adds specified hours
+
+  // Convert both dates to ISO 8601 strings with 'Z' to indicate UTC time
+  const nowIso = now.toISOString();
+  const futureTimeIso = futureTime.toISOString();
+
+  return [nowIso, futureTimeIso];
 }
 
 app.listen(8080, () => {

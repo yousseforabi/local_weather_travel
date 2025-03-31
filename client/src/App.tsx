@@ -1,5 +1,8 @@
 import AddressInput from "./components/AddressInput";
 import TransportDeparture from "./components/departure/TransportDeparture";
+
+import TransportDepartures from "./components/departure/TransportDeparture";
+import "./index.css";
 import WeatherComponent from "./components/weather/Weather";
 import MapTraffic from "./components/traffic/MapTraffic";
 import "./index.css";
