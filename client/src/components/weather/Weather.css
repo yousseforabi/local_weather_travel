@@ -15,3 +15,11 @@
   justify-content: center;
   align-items: center;
 }
+
+.spinner-container,
+.error-message-container {
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

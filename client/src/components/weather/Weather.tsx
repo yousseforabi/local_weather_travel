@@ -71,54 +71,74 @@ const WeatherComponent = () => {
   const getCurrentTime = (timeInMillis: number) =>
     new Date(timeInMillis * 1000).toLocaleTimeString();
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
-  if (!currentWeather || !weatherData) return null;
-
   return (
-    <div>
-      <div className="current-weather">
-        <h2>
-          {currentWeather.name}, {currentWeather.sys.country}
-          <p className="time">{getCurrentTime(currentWeather.dt)}</p>
-        </h2>
-        <div className="temp">
-          <img
-            src={`http://openweathermap.org/img/w/${currentWeather.weather[0].icon}.png`}
-            alt="Weather Icon"
-          />
-          <p>{currentWeather.main.temp}°C</p>
+    <div className="weather-container">
+      {currentWeather && (
+        <div>
+          <div className="current-weather">
+            <h2>
+              {currentWeather.name}, {currentWeather.sys.country}
+              <p className="time">{getCurrentTime(currentWeather.dt)}</p>
+            </h2>
+            <div className="temp">
+              <img
+                src={`http://openweathermap.org/img/w/${currentWeather.weather[0].icon}.png`}
+                alt="Weather Icon"
+              />
+              <p>{currentWeather.main.temp}°C</p>
+            </div>
+          </div>
+
+          <table className="table-auto">
+            <thead>
+              <tr className="bg-gray-500">
+                <th className="w-1/4 px-2 py-2">Day</th>
+                <th className="w-1/4 px-2 py-2 text-center">Temp &#8451;</th>
+                <th className="w-1/4 px-2 py-2 text-center">Humidity</th>
+                <th className="w-1/4 px-2 py-2 text-center">Weather</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && (
+                <tr>
+                  <td colSpan={4}>
+                    (
+                    <div className="spinner-container">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                    </div>
+                    )
+                  </td>
+                </tr>
+              )}
+              {error && (
+                <tr>
+                  <td colSpan={4}>
+                    <div className="error-message-container">{error}</div>
+                  </td>
+                </tr>
+              )}
+
+              {weatherData.map((weather, index) => (
+                <tr key={index} className="odd:bg-gray-100 even:bg-gray-200">
+                  <td className="w-1/4 px-2 py-2">{weather.day}</td>
+                  <td className="w-1/4 px-2 py-2 text-center">
+                    {weather.temperature}
+                  </td>
+                  <td className="w-1/4 px-2 py-2 text-center">
+                    {weather.humidity}
+                  </td>
+                  <td className="w-1/4 px-2 py-2 text-center">
+                    <img
+                      src={`http://openweathermap.org/img/w/${weather.icon}.png`}
+                      alt="Weather Icon"
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </div>
-      <table className="table-auto">
-        <thead>
-          <tr className="bg-gray-500">
-            <th className="w-1/4 px-2 py-2">Day</th>
-            <th className="w-1/4 px-2 py-2 text-center">Temp &#8451;</th>
-            <th className="w-1/4 px-2 py-2 text-center">Humidity</th>
-            <th className="w-1/4 px-2 py-2 text-center">Weather</th>
-          </tr>
-        </thead>
-        <tbody>
-          {weatherData.map((weather, index) => (
-            <tr key={index} className="odd:bg-gray-100 even:bg-gray-200">
-              <td className="w-1/4 px-2 py-2">{weather.day}</td>
-              <td className="w-1/4 px-2 py-2 text-center">
-                {weather.temperature}
-              </td>
-              <td className="w-1/4 px-2 py-2 text-center">
-                {weather.humidity}
-              </td>
-              <td className="w-1/4 px-2 py-2 text-center">
-                <img
-                  src={`http://openweathermap.org/img/w/${weather.icon}.png`}
-                  alt="Weather Icon"
-                />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      )}
     </div>
   );
 };
