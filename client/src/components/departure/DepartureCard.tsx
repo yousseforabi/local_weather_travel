@@ -8,7 +8,7 @@ interface DepartureCardProps {
     track: number;
 }
 
-const DepartureCard: React.FC<DepartureCardProps> = ({ time, fromLocation, trainType, toLocation, track }) => {
+const DepartureCard: React.FC<DepartureCardProps> = ({ time, fromLocation, trainType=[], toLocation, track }) => {
     const formatTime = (timeString: string) => {
         const date = new Date(timeString);
         return date.toLocaleTimeString('sv-SE', {

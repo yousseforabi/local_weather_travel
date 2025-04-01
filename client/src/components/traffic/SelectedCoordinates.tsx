@@ -18,7 +18,7 @@ const SelectedCoordinates = () => {
   const displayAddress = selectedAddress || defaultAddress;
 
   return (
-    <section className="w-full flex flex-col items-center justify-center m-auto p-6 bg-background rounded-lg shadow-md">
+    <section className="flex flex-col items-center justify-center p-6 bg-background rounded-lg shadow-md">
       <div className="mt-4 w-full text-center bg-foreground p-4 rounded-lg">
         <h3 className="text-lg font-semibold">Selected Address:</h3>
         <p className="text-sm">{formatAddress(displayAddress)}</p>

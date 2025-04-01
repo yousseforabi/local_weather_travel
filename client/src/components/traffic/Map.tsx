@@ -23,7 +23,7 @@ const MyMap = () => {
     : [defaultCoordinates.lat, defaultCoordinates.lon];
 
   return (
-    <section className="w-full flex justify-center p-6">
+    <section className="flex justify-center p-6">
       <section className="w-full min-w-[300px] h-[500px] sm:h-[300px] border border-gray-300 rounded-lg overflow-hidden shadow-md">
         <MapContainer
           center={center}
