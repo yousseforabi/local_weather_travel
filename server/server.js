@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
-const dotenv = require("dotenv");
 const fetch = require("node-fetch");
 const bodyParser = require("body-parser");
 const proj4 = require("proj4");
@@ -24,9 +23,13 @@ let frontendCoordinates = {};
 // Configure the projection for SWEREF99TM required by Trafikverket API
 proj4.defs("EPSG:3006", "+proj=utm +zone=33 +ellps=GRS80 +units=m +no_defs");
 
-const API_URL = process.env.TRAFIKVERKET_API_URL;
-const AUTH_KEY = process.env.TRAFIKVERKET_API_KEY;
+const API_URL_SITUATION = process.env.TRAFIKVERKET_API_URL_SITUATION;
+const AUTH_KEY_SITUATION = process.env.TRAFIKVERKET_API_KEY_SITUATION;
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
+
+//Trasport
+const AUTH_KEY = process.env.TRAFIKVERKET_API_KEY;
+const API_URL = process.env.TRAFIKVERKET_API_URL;
 
 app.get("/fetchDataTrafficSituation", (req, res) => {
   const { lat, lon } = req.query;
@@ -37,7 +40,7 @@ app.get("/fetchDataTrafficSituation", (req, res) => {
 
   const xmlDataSituation = `
   <REQUEST>
-    <LOGIN authenticationkey="${AUTH_KEY}"/>
+    <LOGIN authenticationkey="${AUTH_KEY_SITUATION}"/>
     <QUERY objecttype="Situation" schemaversion="1" limit="10">
       <FILTER>
         <NEAR name="Deviation.Geometry.WGS84" value="${lon} ${lat}"/>
@@ -47,7 +50,7 @@ app.get("/fetchDataTrafficSituation", (req, res) => {
   `;
 
   axios
-    .post(API_URL, xmlDataSituation, {
+    .post(API_URL_SITUATION, xmlDataSituation, {
       headers: {
         "Content-Type": "application/xml",
       },

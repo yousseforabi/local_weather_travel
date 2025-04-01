@@ -76,7 +76,7 @@ const Traffic: React.FC = () => {
   }
 
   return (
-    <section className="flex justify-center items-center flex-col w-full h-auto p-6 rounded-lg shadow-md border bg-background">
+    <section className="flex justify-center items-center flex-col h-auto px-6 bg-background">
       <section className="mb-4">
         <Heading label="TRAFFIC UPDATES" />
       </section>

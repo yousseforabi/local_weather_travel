@@ -32,3 +32,7 @@ I will implement the state management library.
 
 Week 3:
 Created the Store and implemented Zustand in traffic component
+
+Week4:
+Added Zustand in addressInput component, update store, add some styling to traffic, map and SelectedCoordinates
+The map is always visualized as it has some default coordinates that updates when the user inser a location in user input. Thi will update the map component, coordinates and trafficSituation data from trafikverket api
