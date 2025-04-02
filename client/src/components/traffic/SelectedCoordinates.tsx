@@ -13,13 +13,12 @@ const SelectedCoordinates = () => {
     return formatted;
   };
 
-  // Fallback logic: use coordinates if available, otherwise use defaultCoordinates
   const displayCoordinates = coordinates || defaultCoordinates;
   const displayAddress = selectedAddress || defaultAddress;
 
   return (
-    <section className="flex flex-col items-center justify-center p-6 bg-background rounded-lg shadow-md">
-      <div className="mt-4 w-full text-center bg-foreground p-4 rounded-lg">
+    <section className="flex flex-col items-center p-6 bg-background">
+      <div className="m-auto w-full text-center p-4 rounded-lg">
         <h3 className="text-lg font-semibold">Selected Address:</h3>
         <p className="text-sm">{formatAddress(displayAddress)}</p>
         <h4 className="text-lg font-semibold mt-2">Coordinates:</h4>

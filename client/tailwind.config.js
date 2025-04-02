@@ -17,6 +17,7 @@ export default {
       screens: {
         'xs': {'max': '480px'},
         'sm': '640px',
+        'lg': '900px',
       },
     },
   },

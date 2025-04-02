@@ -123,48 +123,49 @@ const AddressInput = () => {
   return (
     <section className="w-full flex flex-col items-center justify-center m-auto p-6 bg-background rounded-lg shadow-md">
       <h2 className="text-xl font-semibold text-text mb-4">Local Travel & Weather Dashboard</h2>
-      <section className="flex items-baseline w-[500px] justify-between">
+  
+      <section className="flex flex-col lg:flex-row items-baseline w-full max-w-[500px] justify-between gap-4 sm:w-full">
         <input
           type="text"
           placeholder="Enter your address"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          className="w-3/5 p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full lg:w-3/5 p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button
           onClick={fetchCoordinates}
           disabled={loading}
-          className={`px-9 py-3 rounded-lg text-white font-semibold ${
+          className={`w-full lg:w-auto px-9 py-3 rounded-lg text-white font-semibold ${
             loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
-        {loading ? "Loading..." : "SEARCH"}
+          {loading ? "Loading..." : "SEARCH"}
         </button>
       </section>
   
-    {error && <p className="text-red-600 font-semibold mt-2">{error}</p>}
+      {error && <p className="text-red-600 font-semibold mt-2">{error}</p>}
   
-    {suggestions.length > 0 && (
-      <ul className="w-full mt-4 border border-gray-300 rounded-lg bg-white">
-        {suggestions.map((result, index) => (
-          <li
-            key={index}
-            onClick={() =>
-              handleSelectSuggestion(
-                result.geometry.location.lat,
-                result.geometry.location.lng,
-                result.formatted_address
-              )
-            }
-            className="p-3 border-b last:border-none hover:bg-gray-100 cursor-pointer"
-          >
-            {formatAddress(result.formatted_address)}
-          </li>
-        ))}
-      </ul>
-    )}
-  </section>  
-  );
+      {suggestions.length > 0 && (
+        <ul className="w-full mt-4 border border-gray-300 rounded-lg bg-white max-w-[500px]">
+          {suggestions.map((result, index) => (
+            <li
+              key={index}
+              onClick={() =>
+                handleSelectSuggestion(
+                  result.geometry.location.lat,
+                  result.geometry.location.lng,
+                  result.formatted_address
+                )
+              }
+              className="p-3 border-b last:border-none hover:bg-gray-100 cursor-pointer"
+            >
+              {formatAddress(result.formatted_address)}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );  
 };
 
 export default AddressInput;
