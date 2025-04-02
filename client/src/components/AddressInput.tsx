@@ -163,16 +163,6 @@ const AddressInput = () => {
         ))}
       </ul>
     )}
-  
-    {/*{coordinates && (
-      <div className="mt-4 w-full text-center bg-foreground p-4 rounded-lg">
-        <h3 className="text-lg font-semibold">Selected Address:</h3>
-        <p className="text-sm">{formatAddress(selectedAddress)}</p>
-        <h4 className="text-lg font-semibold mt-2">Coordinates:</h4>
-        <p className="text-sm">Latitude: {coordinates.lat}</p>
-        <p className="text-sm">Longitude: {coordinates.lon}</p>
-      </div>
-    )}*/}
   </section>  
   );
 };
