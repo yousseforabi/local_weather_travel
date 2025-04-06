@@ -13,7 +13,7 @@ const App = () => {
         <ErrorBoundary>
           <AddressInput />
         </ErrorBoundary>
-        <div className="flex justify-center">
+        <div className="flex gap-20 justify-center">
           <TransportDeparture />
           <WeatherComponent />
         </div>

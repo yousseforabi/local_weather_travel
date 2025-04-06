@@ -86,7 +86,7 @@ const DepartureBoard: React.FC<DepartureBoardProps> = ({
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {departures.slice(0, 6).map((departure, index) => (
+          {departures.slice(0, 12).map((departure, index) => (
             <DepartureCard
               key={index}
               time={departure.AdvertisedTimeAtLocation}
