@@ -9,14 +9,16 @@ import ErrorBoundary from "./components/error/ErrorBoudary";
 const App = () => {
   return (
     <>
-        <div className="space-y-4">
-          <ErrorBoundary>
-            <AddressInput />
-          </ErrorBoundary>
+      <div className="space-y-4">
+        <ErrorBoundary>
+          <AddressInput />
+        </ErrorBoundary>
+        <div className="flex justify-center">
           <TransportDeparture />
           <WeatherComponent />
-          <MapTraffic />
         </div>
+        <MapTraffic />
+      </div>
     </>
   );
 };

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useAddressStore } from "../store/store";
 
 type Suggestion = {
@@ -11,13 +11,42 @@ type Suggestion = {
 const AddressInput = () => {
   // Using Zustand store to manage state
   const setCoordinates = useAddressStore((state) => state.setCoordinates);
-  const setSelectedAddress = useAddressStore((state) => state.setSelectedAddress);
+  const setSelectedAddress = useAddressStore(
+    (state) => state.setSelectedAddress
+  );
   const address = useAddressStore((state) => state.address);
   const setAddress = useAddressStore((state) => state.setAddress);
-  
+
   const [error, setError] = useState<string>("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const initializeWithGeolocation = async () => {
+      try {
+        setLoading(true);
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              await setCoordinates({
+                lat: position.coords.latitude,
+                lon: position.coords.longitude,
+              });
+            },
+            (error) => {
+              console.error("Geolocation error:", error);
+            }
+          );
+        }
+      } catch (error) {
+        console.error("Error getting location:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeWithGeolocation();
+  }, []);
 
   const fetchWithTimeout = async (url: string, timeout = 5000, retries = 3) => {
     for (let i = 0; i < retries; i++) {
@@ -28,7 +57,8 @@ const AddressInput = () => {
         const response = await fetch(url, { signal: controller.signal });
         clearTimeout(id);
 
-        if (!response.ok) throw new Error(`Request failed with status: ${response.status}`);
+        if (!response.ok)
+          throw new Error(`Request failed with status: ${response.status}`);
 
         return await response.json();
       } catch (err) {
@@ -38,7 +68,8 @@ const AddressInput = () => {
         } else {
           console.error("Unknown error occurred");
         }
-        if (i === retries - 1) throw new Error("Failed after multiple attempts");
+        if (i === retries - 1)
+          throw new Error("Failed after multiple attempts");
       }
     }
   };
@@ -52,7 +83,9 @@ const AddressInput = () => {
     setError("");
     setLoading(true);
 
-    const apiUrl = `http://localhost:8080/geocode?address=${encodeURIComponent(address)}`;
+    const apiUrl = `http://localhost:8080/geocode?address=${encodeURIComponent(
+      address
+    )}`;
     let retries = 3;
 
     while (retries > 0) {
@@ -64,14 +97,15 @@ const AddressInput = () => {
 
         if (data.status.toLowerCase() === "ok" && data.results.length > 0) {
           const coordinates = data.results[0].geometry.location;
-          console.log(`Latitudine: ${coordinates.lat}, Longitudine: ${coordinates.lng}`);
+          console.log(
+            `Latitudine: ${coordinates.lat}, Longitudine: ${coordinates.lng}`
+          );
           console.log("Final coordinates are: ", coordinates);
 
           setSuggestions(data.results);
           setLoading(false);
           return;
         }
-
       } catch (err) {
         console.error("Error fetching coordinates:", err);
       }
@@ -106,7 +140,11 @@ const AddressInput = () => {
     }
   };
 
-  const handleSelectSuggestion = async (lat: number, lon: number, formattedAddress: string) => {
+  const handleSelectSuggestion = async (
+    lat: number,
+    lon: number,
+    formattedAddress: string
+  ) => {
     setCoordinates({ lat, lon });
     setSelectedAddress(formattedAddress);
     console.log("Coordinates:", { lat, lon });
@@ -122,7 +160,9 @@ const AddressInput = () => {
 
   return (
     <section className="w-full flex flex-col items-center justify-center m-auto p-6 bg-background rounded-lg shadow-md">
-      <h2 className="text-xl font-semibold text-text mb-4">Local Travel & Weather Dashboard</h2>
+      <h2 className="text-xl font-semibold text-text mb-4">
+        Local Travel & Weather Dashboard
+      </h2>
       <section className="flex items-baseline w-[500px] justify-between">
         <input
           type="text"
@@ -138,32 +178,32 @@ const AddressInput = () => {
             loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
-        {loading ? "Loading..." : "SEARCH"}
+          {loading ? "Loading..." : "SEARCH"}
         </button>
       </section>
-  
-    {error && <p className="text-red-600 font-semibold mt-2">{error}</p>}
-  
-    {suggestions.length > 0 && (
-      <ul className="w-full mt-4 border border-gray-300 rounded-lg bg-white">
-        {suggestions.map((result, index) => (
-          <li
-            key={index}
-            onClick={() =>
-              handleSelectSuggestion(
-                result.geometry.location.lat,
-                result.geometry.location.lng,
-                result.formatted_address
-              )
-            }
-            className="p-3 border-b last:border-none hover:bg-gray-100 cursor-pointer"
-          >
-            {formatAddress(result.formatted_address)}
-          </li>
-        ))}
-      </ul>
-    )}
-  </section>  
+
+      {error && <p className="text-red-600 font-semibold mt-2">{error}</p>}
+
+      {suggestions.length > 0 && (
+        <ul className="w-full mt-4 border border-gray-300 rounded-lg bg-white">
+          {suggestions.map((result, index) => (
+            <li
+              key={index}
+              onClick={() =>
+                handleSelectSuggestion(
+                  result.geometry.location.lat,
+                  result.geometry.location.lng,
+                  result.formatted_address
+                )
+              }
+              className="p-3 border-b last:border-none hover:bg-gray-100 cursor-pointer"
+            >
+              {formatAddress(result.formatted_address)}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 };
 

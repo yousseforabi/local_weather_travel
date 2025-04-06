@@ -41,7 +41,7 @@ app.get("/fetchDataTrafficSituation", (req, res) => {
   const xmlDataSituation = `
   <REQUEST>
     <LOGIN authenticationkey="${AUTH_KEY_SITUATION}"/>
-    <QUERY objecttype="Situation" schemaversion="1" limit="10">
+    <QUERY objecttype="Situation" schemaversion="1" limit="6">
       <FILTER>
         <NEAR name="Deviation.Geometry.WGS84" value="${lon} ${lat}"/>
       </FILTER>
@@ -170,7 +170,7 @@ app.get("/findNearestStation", async (req, res) => {
           <INCLUDE>Geometry.WGS84</INCLUDE>
       </QUERY>
   </REQUEST>`;
-  
+
   try {
     const response = await axios.post(API_URL, xmlData, {
       headers: {
@@ -180,15 +180,15 @@ app.get("/findNearestStation", async (req, res) => {
     });
 
     const jsonObj = parser.parse(response.data);
-    
+
     const stations = jsonObj.RESPONSE.RESULT.TrainStation || [];
 
-    const transformedStations = stations.map(station => ({
+    const transformedStations = stations.map((station) => ({
       AdvertisedLocationName: station.AdvertisedLocationName,
       Longitude: parseCoordinates(station.Geometry.WGS84).Longitude,
       Latitude: parseCoordinates(station.Geometry.WGS84).Latitude,
       LocationSignature: station.LocationSignature,
-      Prognosticated: station.Prognosticated
+      Prognosticated: station.Prognosticated,
     }));
 
     console.log("TRANSFORMED STATIONS FROM API RESPONSE:", transformedStations);
@@ -270,9 +270,8 @@ app.get("/trainDepartures", async (req, res) => {
       },
     });
 
-
     const jsonObj = parser.parse(response.data);
-    
+
     res.json(jsonObj.RESPONSE.RESULT.TrainAnnouncement || []);
   } catch (error) {
     console.error("Error fetching train departures:", error);
@@ -300,7 +299,7 @@ function parseCoordinates(pointString) {
   const coords = pointString.match(/POINT \(([^ ]+) ([^ ]+)\)/);
   return {
     Longitude: parseFloat(coords[1]),
-    Latitude: parseFloat(coords[2])
+    Latitude: parseFloat(coords[2]),
   };
 }
 
