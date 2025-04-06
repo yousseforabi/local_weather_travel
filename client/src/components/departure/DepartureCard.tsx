@@ -29,9 +29,11 @@ const DepartureCard: React.FC<DepartureCardProps> = ({
         <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
           {formatTime(time)}
         </div>
-        <div className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm font-light">
-          {trainType[0].toString().slice(0, 2)} {trainType[1]}
-        </div>
+        {trainType?.[0] && (
+          <div className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm font-light">
+            {trainType[0].toString().slice(0, 2)} {trainType[1]}
+          </div>
+        )}
       </div>
       <div className="space-y-2">
         {fromLocation && (
